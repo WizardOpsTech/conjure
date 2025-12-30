@@ -1,0 +1,51 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: true
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run tests
+        run: go test ./... -v -race -coverprofile=coverage.out -covermode=atomic
+
+      - name: Build for multiple platforms
+        run: |
+          # Linux amd64
+          GOOS=linux GOARCH=amd64 go build -o dist/conjure-linux-amd64 .
+
+          # Linux arm64
+          GOOS=linux GOARCH=arm64 go build -o dist/conjure-linux-arm64 .
+
+          # macOS amd64
+          GOOS=darwin GOARCH=amd64 go build -o dist/conjure-darwin-amd64 .
+
+          # macOS arm64
+          GOOS=darwin GOARCH=arm64 go build -o dist/conjure-darwin-arm64 .
+
+          # Windows amd64
+          GOOS=windows GOARCH=amd64 go build -o dist/conjure-windows-amd64.exe .
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: conjure-binaries
+          path: dist/
+          retention-days: 7
