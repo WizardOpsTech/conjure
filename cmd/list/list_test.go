@@ -60,7 +60,7 @@ func captureOutput(f func()) string {
 	os.Stdout = old
 
 	var buf bytes.Buffer
-	io.Copy(&buf, r)
+	_, _ = io.Copy(&buf, r)
 	return buf.String()
 }
 
@@ -235,8 +235,8 @@ func TestListTemplates_WithTypeFilter_TF(t *testing.T) {
 	defer cleanup()
 
 	templatesPath := filepath.Join(baseDir, "templates")
-	os.WriteFile(filepath.Join(templatesPath, "main.tf.tmpl"), []byte("test"), 0644)
-	os.WriteFile(filepath.Join(templatesPath, "deployment.yaml.tmpl"), []byte("test"), 0644)
+	_ = os.WriteFile(filepath.Join(templatesPath, "main.tf.tmpl"), []byte("test"), 0644)
+	_ = os.WriteFile(filepath.Join(templatesPath, "deployment.yaml.tmpl"), []byte("test"), 0644)
 
 	output := captureOutput(func() {
 		listTemplates("tf") // without dot prefix
@@ -259,7 +259,7 @@ func TestListTemplates_NoMatchesForFilter(t *testing.T) {
 
 	// Create only YAML templates
 	templatesPath := filepath.Join(baseDir, "templates")
-	os.WriteFile(filepath.Join(templatesPath, "deployment.yaml.tmpl"), []byte("test"), 0644)
+	_ = os.WriteFile(filepath.Join(templatesPath, "deployment.yaml.tmpl"), []byte("test"), 0644)
 
 	output := captureOutput(func() {
 		listTemplates(".tf") // Filter for TF, but none exist
@@ -277,9 +277,9 @@ func TestListTemplates_IgnoresNonTmplFiles(t *testing.T) {
 	templatesPath := filepath.Join(baseDir, "templates")
 
 	// Create .tmpl file and non-.tmpl file
-	os.WriteFile(filepath.Join(templatesPath, "valid.yaml.tmpl"), []byte("test"), 0644)
-	os.WriteFile(filepath.Join(templatesPath, "invalid.yaml"), []byte("test"), 0644)
-	os.WriteFile(filepath.Join(templatesPath, "README.md"), []byte("test"), 0644)
+	_ = os.WriteFile(filepath.Join(templatesPath, "valid.yaml.tmpl"), []byte("test"), 0644)
+	_ = os.WriteFile(filepath.Join(templatesPath, "invalid.yaml"), []byte("test"), 0644)
+	_ = os.WriteFile(filepath.Join(templatesPath, "README.md"), []byte("test"), 0644)
 
 	output := captureOutput(func() {
 		listTemplates("")
@@ -327,25 +327,25 @@ func TestListBundles_WithBundles(t *testing.T) {
 
 	// Bundle 1: Kubernetes
 	bundle1Path := filepath.Join(bundlesPath, "k8s-app")
-	os.MkdirAll(bundle1Path, 0755)
+	_ = os.MkdirAll(bundle1Path, 0755)
 	metadata1 := BundleMetadata{
 		BundleType:        "kubernetes",
 		BundleName:        "k8s-app",
 		BundleDescription: "Kubernetes application bundle",
 	}
 	data1, _ := json.Marshal(metadata1)
-	os.WriteFile(filepath.Join(bundle1Path, "conjure.json"), data1, 0644)
+	_ = os.WriteFile(filepath.Join(bundle1Path, "conjure.json"), data1, 0644)
 
 	// Bundle 2: Terraform
 	bundle2Path := filepath.Join(bundlesPath, "tf-infra")
-	os.MkdirAll(bundle2Path, 0755)
+	_ = os.MkdirAll(bundle2Path, 0755)
 	metadata2 := BundleMetadata{
 		BundleType:        "terraform",
 		BundleName:        "tf-infra",
 		BundleDescription: "Terraform infrastructure bundle",
 	}
 	data2, _ := json.Marshal(metadata2)
-	os.WriteFile(filepath.Join(bundle2Path, "conjure.json"), data2, 0644)
+	_ = os.WriteFile(filepath.Join(bundle2Path, "conjure.json"), data2, 0644)
 
 	output := captureOutput(func() {
 		listBundles("")
@@ -371,25 +371,25 @@ func TestListBundles_WithTypeFilter_Kubernetes(t *testing.T) {
 
 	// Create Kubernetes bundle
 	k8sPath := filepath.Join(bundlesPath, "k8s-app")
-	os.MkdirAll(k8sPath, 0755)
+	_ = os.MkdirAll(k8sPath, 0755)
 	k8sMeta := BundleMetadata{
 		BundleType:        "kubernetes",
 		BundleName:        "k8s-app",
 		BundleDescription: "K8s bundle",
 	}
 	k8sData, _ := json.Marshal(k8sMeta)
-	os.WriteFile(filepath.Join(k8sPath, "conjure.json"), k8sData, 0644)
+	_ = os.WriteFile(filepath.Join(k8sPath, "conjure.json"), k8sData, 0644)
 
 	// Create Terraform bundle
 	tfPath := filepath.Join(bundlesPath, "tf-infra")
-	os.MkdirAll(tfPath, 0755)
+	_ = os.MkdirAll(tfPath, 0755)
 	tfMeta := BundleMetadata{
 		BundleType:        "terraform",
 		BundleName:        "tf-infra",
 		BundleDescription: "TF bundle",
 	}
 	tfData, _ := json.Marshal(tfMeta)
-	os.WriteFile(filepath.Join(tfPath, "conjure.json"), tfData, 0644)
+	_ = os.WriteFile(filepath.Join(tfPath, "conjure.json"), tfData, 0644)
 
 	output := captureOutput(func() {
 		listBundles("kubernetes")
@@ -414,14 +414,14 @@ func TestListBundles_NoMatchesForFilter(t *testing.T) {
 
 	// Create only Kubernetes bundle
 	k8sPath := filepath.Join(bundlesPath, "k8s-app")
-	os.MkdirAll(k8sPath, 0755)
+	_ = os.MkdirAll(k8sPath, 0755)
 	metadata := BundleMetadata{
 		BundleType:        "kubernetes",
 		BundleName:        "k8s-app",
 		BundleDescription: "K8s bundle",
 	}
 	data, _ := json.Marshal(metadata)
-	os.WriteFile(filepath.Join(k8sPath, "conjure.json"), data, 0644)
+	_ = os.WriteFile(filepath.Join(k8sPath, "conjure.json"), data, 0644)
 
 	output := captureOutput(func() {
 		listBundles("terraform") // Filter for terraform, but none exist
@@ -440,18 +440,18 @@ func TestListBundles_SkipsDirectoriesWithoutMetadata(t *testing.T) {
 
 	// Create directory without conjure.json
 	invalidPath := filepath.Join(bundlesPath, "invalid-bundle")
-	os.MkdirAll(invalidPath, 0755)
+	_ = os.MkdirAll(invalidPath, 0755)
 
 	// Create valid bundle
 	validPath := filepath.Join(bundlesPath, "valid-bundle")
-	os.MkdirAll(validPath, 0755)
+	_ = os.MkdirAll(validPath, 0755)
 	metadata := BundleMetadata{
 		BundleType:        "kubernetes",
 		BundleName:        "valid-bundle",
 		BundleDescription: "Valid",
 	}
 	data, _ := json.Marshal(metadata)
-	os.WriteFile(filepath.Join(validPath, "conjure.json"), data, 0644)
+	_ = os.WriteFile(filepath.Join(validPath, "conjure.json"), data, 0644)
 
 	output := captureOutput(func() {
 		listBundles("")
@@ -475,18 +475,18 @@ func TestListBundles_SkipsFiles(t *testing.T) {
 	bundlesPath := filepath.Join(baseDir, "bundles")
 
 	// Create a file (not a directory) in bundles directory
-	os.WriteFile(filepath.Join(bundlesPath, "README.md"), []byte("test"), 0644)
+	_ = os.WriteFile(filepath.Join(bundlesPath, "README.md"), []byte("test"), 0644)
 
 	// Create a valid bundle
 	validPath := filepath.Join(bundlesPath, "valid-bundle")
-	os.MkdirAll(validPath, 0755)
+	_ = os.MkdirAll(validPath, 0755)
 	metadata := BundleMetadata{
 		BundleType:        "kubernetes",
 		BundleName:        "valid-bundle",
 		BundleDescription: "Valid",
 	}
 	data, _ := json.Marshal(metadata)
-	os.WriteFile(filepath.Join(validPath, "conjure.json"), data, 0644)
+	_ = os.WriteFile(filepath.Join(validPath, "conjure.json"), data, 0644)
 
 	output := captureOutput(func() {
 		listBundles("")

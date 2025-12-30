@@ -114,14 +114,14 @@ func (m model) View() string {
 	var b strings.Builder
 
 	// Title
-	b.WriteString(titleStyle.Render(fmt.Sprintf("Template: %s", m.metadata.TemplateName)))
-	b.WriteString("\n")
-	b.WriteString(descriptionStyle.Render(m.metadata.Description))
-	b.WriteString("\n\n")
+	_, _ = b.WriteString(titleStyle.Render(fmt.Sprintf("Template: %s", m.metadata.TemplateName)))
+	_, _ = b.WriteString("\n")
+	_, _ = b.WriteString(descriptionStyle.Render(m.metadata.Description))
+	_, _ = b.WriteString("\n\n")
 
 	// Progress
-	b.WriteString(descriptionStyle.Render(fmt.Sprintf("Variable %d of %d", m.currentIndex+1, len(m.metadata.Variables))))
-	b.WriteString("\n\n")
+	_, _ = b.WriteString(descriptionStyle.Render(fmt.Sprintf("Variable %d of %d", m.currentIndex+1, len(m.metadata.Variables))))
+	_, _ = b.WriteString("\n\n")
 
 	// Current variable
 	if m.currentIndex < len(m.metadata.Variables) {
@@ -132,25 +132,25 @@ func (m model) View() string {
 		if currentVar.Required {
 			required = lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Render(" *")
 		}
-		b.WriteString(promptStyle.Render(fmt.Sprintf("%s%s", currentVar.Name, required)))
-		b.WriteString("\n")
+		_, _ = b.WriteString(promptStyle.Render(fmt.Sprintf("%s%s", currentVar.Name, required)))
+		_, _ = b.WriteString("\n")
 
 		// Description
-		b.WriteString(descriptionStyle.Render(currentVar.Description))
-		b.WriteString("\n")
+		_, _ = b.WriteString(descriptionStyle.Render(currentVar.Description))
+		_, _ = b.WriteString("\n")
 
 		// Default value hint
 		if currentVar.Default != "" {
-			b.WriteString(descriptionStyle.Render(fmt.Sprintf("[default: %s]", currentVar.Default)))
-			b.WriteString("\n")
+			_, _ = b.WriteString(descriptionStyle.Render(fmt.Sprintf("[default: %s]", currentVar.Default)))
+			_, _ = b.WriteString("\n")
 		}
 
 		// Input field
-		b.WriteString(inputStyle.Render("> " + m.currentInput + "█"))
-		b.WriteString("\n\n")
+		_, _ = b.WriteString(inputStyle.Render("> " + m.currentInput + "█"))
+		_, _ = b.WriteString("\n\n")
 
 		// Help text
-		b.WriteString(descriptionStyle.Render("Press Enter to continue, Ctrl+C to cancel"))
+		_, _ = b.WriteString(descriptionStyle.Render("Press Enter to continue, Ctrl+C to cancel"))
 	}
 
 	return b.String()
@@ -272,7 +272,9 @@ func CollectTemplateOverrides(bundleMeta *metadata.BundleMetadata, currentVars m
 		// Ask if user wants to add an override
 		fmt.Print(promptStyle.Render("Add a template-specific override? (y/n): "))
 		var response string
-		fmt.Scanln(&response)
+		if _, err := fmt.Scanln(&response); err != nil {
+			break
+		}
 		response = strings.TrimSpace(strings.ToLower(response))
 
 		if response != "y" && response != "yes" {
@@ -287,7 +289,10 @@ func CollectTemplateOverrides(bundleMeta *metadata.BundleMetadata, currentVars m
 		}
 		fmt.Print(promptStyle.Render("Select template (number): "))
 		var templateIdx int
-		fmt.Scanln(&templateIdx)
+		if _, err := fmt.Scanln(&templateIdx); err != nil {
+			fmt.Println(descriptionStyle.Render("Invalid input, skipping..."))
+			continue
+		}
 		if templateIdx < 1 || templateIdx > len(templateNames) {
 			fmt.Println(descriptionStyle.Render("Invalid selection, skipping..."))
 			continue
@@ -303,7 +308,10 @@ func CollectTemplateOverrides(bundleMeta *metadata.BundleMetadata, currentVars m
 		}
 		fmt.Print(promptStyle.Render("Select variable to override (number): "))
 		var varIdx int
-		fmt.Scanln(&varIdx)
+		if _, err := fmt.Scanln(&varIdx); err != nil {
+			fmt.Println(descriptionStyle.Render("Invalid input, skipping..."))
+			continue
+		}
 		if varIdx < 1 || varIdx > len(sharedVarNames) {
 			fmt.Println(descriptionStyle.Render("Invalid selection, skipping..."))
 			continue
@@ -313,7 +321,10 @@ func CollectTemplateOverrides(bundleMeta *metadata.BundleMetadata, currentVars m
 		// Get new value
 		fmt.Print(promptStyle.Render(fmt.Sprintf("New value for %s in %s: ", selectedVar, selectedTemplate)))
 		var newValue string
-		fmt.Scanln(&newValue)
+		if _, err := fmt.Scanln(&newValue); err != nil {
+			fmt.Println(descriptionStyle.Render("Invalid input, skipping..."))
+			continue
+		}
 		newValue = strings.TrimSpace(newValue)
 
 		if newValue == "" {

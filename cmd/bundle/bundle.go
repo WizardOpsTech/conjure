@@ -63,7 +63,7 @@ Examples:
 func init() {
 	// Add flags
 	BundleCmd.Flags().StringP("output", "o", "", "Output directory path (required)")
-	BundleCmd.MarkFlagRequired("output")
+	_ = BundleCmd.MarkFlagRequired("output")
 	BundleCmd.Flags().StringArrayP("var", "v", []string{}, "Set template variables (format: key=value or template.tmpl:key=value)")
 	BundleCmd.Flags().BoolP("interactive", "i", false, "Enable/disable interactive mode (default: auto-enabled when no --var or -f provided)")
 	BundleCmd.Flags().StringP("values", "f", "", "Provide variables using a values.yaml file")
@@ -317,24 +317,6 @@ func renderTemplate(templateContent string, variables map[string]interface{}) (s
 	}
 
 	return rendered.String(), nil
-}
-
-// parseValues parses a values.yaml file
-func parseValues(valuesFile string) (map[string]interface{}, error) {
-	var values map[string]interface{}
-
-	// Read the values.yaml file provided
-	data, err := os.ReadFile(valuesFile)
-	if err != nil {
-		return nil, fmt.Errorf("error reading values file: %w", err)
-	}
-
-	// Unmarshal the data
-	if err := yaml.Unmarshal(data, &values); err != nil {
-		return nil, fmt.Errorf("error unmarshalling values yaml: %w", err)
-	}
-
-	return values, nil
 }
 
 // parseValuesWithOverrides parses a values.yaml file and extracts template-specific overrides

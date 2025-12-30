@@ -59,7 +59,7 @@ Examples:
 func init() {
 	// Add flags
 	TemplateCmd.Flags().StringP("output", "o", "", "Output file path (required)")
-	TemplateCmd.MarkFlagRequired("output")
+	_ = TemplateCmd.MarkFlagRequired("output")
 	TemplateCmd.Flags().StringArrayP("var", "v", []string{}, "Set template variables (format: key=value)")
 	TemplateCmd.Flags().BoolP("interactive", "i", false, "Enable/disable interactive mode (default: auto-enabled when no --var or -f provided)")
 	TemplateCmd.Flags().StringP("values", "f", "", "Provide variables using a values.yaml file")

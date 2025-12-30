@@ -76,9 +76,9 @@ func initConfig() {
 		viper.SetConfigName(".conjure")
 	}
 
-	viper.AutomaticEnv()           // read in environment variables that match
-	viper.SetEnvPrefix("CONJURE")  // prefix CONJURE_ before env vars e.g. CONJURE_TEMPLATES_DIR
-	viper.BindEnv("TEMPLATES_DIR") // path to a directory containing templates.
+	viper.AutomaticEnv()          // read in environment variables that match
+	viper.SetEnvPrefix("CONJURE") // prefix CONJURE_ before env vars e.g. CONJURE_TEMPLATES_DIR
+	_ = viper.BindEnv("TEMPLATES_DIR") // path to a directory containing templates.
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
