@@ -80,7 +80,7 @@ changelog:
 
 release:
   github:
-    owner: thesudoYT
+    owner: WizardOpsTech
     name: conjure
   draft: false
   prerelease: auto
@@ -100,15 +100,15 @@ release:
 
     ```bash
     # Linux
-    curl -L https://github.com/thesudoYT/conjure/releases/download/{{ .Tag }}/conjure_{{ .Tag }}_Linux_x86_64.tar.gz | tar xz
+    curl -L https://github.com/WizardOpsTech/conjure/releases/download/{{ .Tag }}/conjure_{{ .Tag }}_Linux_x86_64.tar.gz | tar xz
     sudo mv conjure /usr/local/bin/
 
     # macOS (Intel)
-    curl -L https://github.com/thesudoYT/conjure/releases/download/{{ .Tag }}/conjure_{{ .Tag }}_Darwin_x86_64.tar.gz | tar xz
+    curl -L https://github.com/WizardOpsTech/conjure/releases/download/{{ .Tag }}/conjure_{{ .Tag }}_Darwin_x86_64.tar.gz | tar xz
     sudo mv conjure /usr/local/bin/
 
     # macOS (Apple Silicon)
-    curl -L https://github.com/thesudoYT/conjure/releases/download/{{ .Tag }}/conjure_{{ .Tag }}_Darwin_arm64.tar.gz | tar xz
+    curl -L https://github.com/WizardOpsTech/conjure/releases/download/{{ .Tag }}/conjure_{{ .Tag }}_Darwin_arm64.tar.gz | tar xz
     sudo mv conjure /usr/local/bin/
     ```
 
@@ -118,4 +118,4 @@ release:
 
     ---
 
-    **Full Changelog**: https://github.com/thesudoYT/conjure/compare/{{ .PreviousTag }}...{{ .Tag }}
+    **Full Changelog**: https://github.com/WizardOpsTech/conjure/compare/{{ .PreviousTag }}...{{ .Tag }}
