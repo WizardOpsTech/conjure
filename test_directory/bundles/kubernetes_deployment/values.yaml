@@ -1,0 +1,39 @@
+# Example values file for kubernetes_deployment bundle
+# These values can be used with: conjure bundle kubernetes-deployment -o ./output/ -f values.yaml
+
+# ============================================
+# Shared variables (used across all templates)
+# ============================================
+app_name: "myapp"
+namespace: "production"
+container_port: 8080
+
+# Deployment-specific
+replicas: 5
+container_image: "myregistry/myapp:v1.2.3"
+
+# Service-specific
+service_port: 80
+service_type: "LoadBalancer"
+
+# Ingress-specific
+ingress_host: "myapp.example.com"
+
+# ============================================
+# Template-specific overrides
+# ============================================
+# These override shared variables for specific templates only
+# Useful when you need a different value for one template
+#
+# You can also use CLI flags for template-specific overrides:
+# --var ingress.yaml.tmpl:namespace=ingress-nginx
+
+template_overrides:
+  # Example: Run ingress in a different namespace
+  ingress.yaml.tmpl:
+    namespace: "ingress-nginx"
+
+  # Example: Override service type for specific template
+  # service.yaml.tmpl:
+  #   service_type: "NodePort"
+  #   namespace: "custom-namespace"

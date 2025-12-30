@@ -1,0 +1,1781 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>bundle: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/thesudoYT/conjure/cmd/bundle/bundle.go (72.6%)</option>
+				
+				<option value="file1">github.com/thesudoYT/conjure/cmd/list/list.go (22.2%)</option>
+				
+				<option value="file2">github.com/thesudoYT/conjure/cmd/list/list_bundles.go (72.7%)</option>
+				
+				<option value="file3">github.com/thesudoYT/conjure/cmd/list/list_templates.go (71.4%)</option>
+				
+				<option value="file4">github.com/thesudoYT/conjure/cmd/root.go (0.0%)</option>
+				
+				<option value="file5">github.com/thesudoYT/conjure/cmd/template/template.go (77.7%)</option>
+				
+				<option value="file6">github.com/thesudoYT/conjure/internal/config/config.go (0.0%)</option>
+				
+				<option value="file7">github.com/thesudoYT/conjure/internal/metadata/metadata.go (51.7%)</option>
+				
+				<option value="file8">github.com/thesudoYT/conjure/internal/prompt/prompt.go (0.0%)</option>
+				
+				<option value="file9">github.com/thesudoYT/conjure/main.go (0.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">no coverage</span>
+				<span class="cov1">low coverage</span>
+				<span class="cov2">*</span>
+				<span class="cov3">*</span>
+				<span class="cov4">*</span>
+				<span class="cov5">*</span>
+				<span class="cov6">*</span>
+				<span class="cov7">*</span>
+				<span class="cov8">*</span>
+				<span class="cov9">*</span>
+				<span class="cov10">high coverage</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">/*
+Copyright © 2025 NAME HERE &lt;EMAIL ADDRESS&gt;
+*/
+package bundle
+
+import (
+        "bytes"
+        "encoding/json"
+        "fmt"
+        "os"
+        "path/filepath"
+        "strings"
+        "text/template"
+
+        "github.com/spf13/cobra"
+        "github.com/thesudoYT/conjure/internal/config"
+        "github.com/thesudoYT/conjure/internal/metadata"
+        "github.com/thesudoYT/conjure/internal/prompt"
+        "go.yaml.in/yaml/v3"
+)
+
+// BundleCmd represents the bundle command
+var BundleCmd = &amp;cobra.Command{
+        Use:   "bundle &lt;bundle-name&gt;",
+        Short: "Generate files from a bundle of templates",
+        Long: `Generate multiple files from a bundle of templates with variable substitution.
+
+Bundles are collections of related templates that are rendered together.
+Each bundle has a conjure.json metadata file that defines shared and template-specific variables.
+
+Variable Overrides:
+  - Shared variables apply to all templates
+  - Template-specific overrides using: template.tmpl:key=value
+  - Use template_overrides section in values.yaml
+  - Interactive mode prompts for overrides after collecting main variables
+
+Examples:
+  conjure bundle kubernetes-deployment -o ./k8s/
+  conjure bundle kubernetes-deployment -o ./k8s/ -f values.yaml
+  conjure bundle kubernetes-deployment -o ./k8s/ --var app_name=myapp --var replicas=5
+  conjure bundle kubernetes-deployment -o ./k8s/ --var namespace=prod --var ingress.yaml.tmpl:namespace=ingress-nginx
+  conjure bundle kubernetes-deployment -o ./k8s/ -i`,
+        Args: cobra.ExactArgs(1),
+        Run: func(cmd *cobra.Command, args []string) <span class="cov0" title="0">{
+                bundleName := args[0]
+                outputPath, _ := cmd.Flags().GetString("output")
+                vars, _ := cmd.Flags().GetStringArray("var")
+                valuesFile, _ := cmd.Flags().GetString("values")
+
+                // Determine if interactive mode should be enabled
+                interactive := cmd.Flags().Changed("interactive")
+                if interactive </span><span class="cov0" title="0">{
+                        interactive, _ = cmd.Flags().GetBool("interactive")
+                }</span> else<span class="cov0" title="0"> {
+                        // Auto-enable interactive if no variables provided
+                        interactive = len(vars) == 0 &amp;&amp; valuesFile == ""
+                }</span>
+
+                <span class="cov0" title="0">if err := generateBundle(bundleName, outputPath, vars, interactive, valuesFile); err != nil </span><span class="cov0" title="0">{
+                        fmt.Printf("Error generating bundle: %v\n", err)
+                        os.Exit(1)
+                }</span>
+        },
+}
+
+func init() <span class="cov1" title="1">{
+        // Add flags
+        BundleCmd.Flags().StringP("output", "o", "", "Output directory path (required)")
+        BundleCmd.MarkFlagRequired("output")
+        BundleCmd.Flags().StringArrayP("var", "v", []string{}, "Set template variables (format: key=value or template.tmpl:key=value)")
+        BundleCmd.Flags().BoolP("interactive", "i", false, "Enable/disable interactive mode (default: auto-enabled when no --var or -f provided)")
+        BundleCmd.Flags().StringP("values", "f", "", "Provide variables using a values.yaml file")
+}</span>
+
+func generateBundle(bundleName, outputPath string, varsList []string, interactive bool, valuesFile string) error <span class="cov5" title="4">{
+        // Load configuration
+        cfg, err := config.LoadConfig()
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to load config: %w", err)
+        }</span>
+
+        // Resolve bundle name to directory path
+        <span class="cov5" title="4">bundlePath, err := resolveBundleDirectory(cfg.TemplatesDir, bundleName)
+        if err != nil </span><span class="cov1" title="1">{
+                return err
+        }</span>
+
+        // Load bundle metadata
+        <span class="cov4" title="3">metadataPath := filepath.Join(bundlePath, "conjure.json")
+        bundleMeta, err := metadata.LoadBundleMetadata(metadataPath)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to load bundle metadata: %w", err)
+        }</span>
+
+        <span class="cov4" title="3">fmt.Printf("Bundle: %s\n", bundleMeta.BundleName)
+        fmt.Printf("Description: %s\n", bundleMeta.BundleDescription)
+        fmt.Printf("Type: %s\n\n", bundleMeta.BundleType)
+
+        // Start with an empty variables map
+        userVariables := make(map[string]interface{})
+        templateOverrides := make(map[string]map[string]interface{})
+
+        // First, load values from values.yaml file if provided
+        if valuesFile != "" </span><span class="cov1" title="1">{
+                values, overrides, err := parseValuesWithOverrides(valuesFile)
+                if err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("failed to parse values file: %w", err)
+                }</span>
+                // Copy values from YAML into userVariables
+                <span class="cov1" title="1">for k, v := range values </span><span class="cov3" title="2">{
+                        userVariables[k] = v
+                }</span>
+                // Store template-specific overrides
+                <span class="cov1" title="1">templateOverrides = overrides</span>
+        }
+
+        // Then, parse variables from --var flags (these override values.yaml)
+        <span class="cov4" title="3">cliVariables, cliTemplateOverrides, err := parseVariablesWithTemplateOverrides(varsList)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to parse variables: %w", err)
+        }</span>
+        // Merge CLI variables, overriding any values from YAML
+        <span class="cov4" title="3">for k, v := range cliVariables </span><span class="cov3" title="2">{
+                userVariables[k] = v
+        }</span>
+        // Merge CLI template overrides (these override values.yaml template_overrides)
+        <span class="cov4" title="3">for templateName, overrides := range cliTemplateOverrides </span><span class="cov3" title="2">{
+                if templateOverrides[templateName] == nil </span><span class="cov3" title="2">{
+                        templateOverrides[templateName] = make(map[string]interface{})
+                }</span>
+                <span class="cov3" title="2">for k, v := range overrides </span><span class="cov3" title="2">{
+                        templateOverrides[templateName][k] = v
+                }</span>
+        }
+
+        // If interactive mode, collect all variables and overrides
+        <span class="cov4" title="3">if interactive </span><span class="cov0" title="0">{
+                var interactiveOverrides map[string]map[string]interface{}
+                userVariables, interactiveOverrides, err = prompt.CollectBundleVariables(bundleMeta, userVariables)
+                if err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("failed to collect variables: %w", err)
+                }</span>
+                // Merge interactive overrides with existing template overrides
+                <span class="cov0" title="0">for templateName, overrides := range interactiveOverrides </span><span class="cov0" title="0">{
+                        if templateOverrides[templateName] == nil </span><span class="cov0" title="0">{
+                                templateOverrides[templateName] = make(map[string]interface{})
+                        }</span>
+                        <span class="cov0" title="0">for k, v := range overrides </span><span class="cov0" title="0">{
+                                templateOverrides[templateName][k] = v
+                        }</span>
+                }
+        }
+
+        // Create output directory if it doesn't exist
+        <span class="cov4" title="3">if err := os.MkdirAll(outputPath, 0755); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to create output directory: %w", err)
+        }</span>
+
+        // Read all template files in the bundle directory
+        <span class="cov4" title="3">entries, err := os.ReadDir(bundlePath)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to read bundle directory: %w", err)
+        }</span>
+
+        <span class="cov4" title="3">templatesRendered := 0
+        for _, entry := range entries </span><span class="cov7" title="8">{
+                // Skip directories and non-.tmpl files
+                if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".tmpl") </span><span class="cov4" title="3">{
+                        continue</span>
+                }
+
+                <span class="cov6" title="5">templateFileName := entry.Name()
+                templatePath := filepath.Join(bundlePath, templateFileName)
+
+                // Read template file
+                templateContent, err := os.ReadFile(templatePath)
+                if err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("failed to read template file %s: %w", templateFileName, err)
+                }</span>
+
+                // Start with user variables
+                <span class="cov6" title="5">varsForTemplate := make(map[string]interface{})
+                for k, v := range userVariables </span><span class="cov6" title="6">{
+                        varsForTemplate[k] = v
+                }</span>
+
+                // Apply template-specific overrides from values.yaml
+                <span class="cov6" title="5">if overrides, exists := templateOverrides[templateFileName]; exists </span><span class="cov3" title="2">{
+                        for k, v := range overrides </span><span class="cov3" title="2">{
+                                varsForTemplate[k] = v
+                        }</span>
+                }
+
+                // Merge variables for this specific template
+                <span class="cov6" title="5">templateVars, err := metadata.MergeVariablesForTemplate(bundleMeta, templateFileName, varsForTemplate)
+                if err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("failed to merge variables for %s: %w", templateFileName, err)
+                }</span>
+
+                // Render template
+                <span class="cov6" title="5">rendered, err := renderTemplate(string(templateContent), templateVars)
+                if err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("failed to render template %s: %w", templateFileName, err)
+                }</span>
+
+                // Output file name (remove .tmpl extension)
+                <span class="cov6" title="5">outputFileName := strings.TrimSuffix(templateFileName, ".tmpl")
+                outputFilePath := filepath.Join(outputPath, outputFileName)
+
+                // Write rendered content to output file
+                if err := os.WriteFile(outputFilePath, []byte(rendered), 0644); err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("failed to write output file %s: %w", outputFileName, err)
+                }</span>
+
+                <span class="cov6" title="5">fmt.Printf("  ✓ Rendered: %s\n", outputFileName)
+                templatesRendered++</span>
+        }
+
+        <span class="cov4" title="3">if templatesRendered == 0 </span><span class="cov0" title="0">{
+                return fmt.Errorf("no templates found in bundle")
+        }</span>
+
+        <span class="cov4" title="3">fmt.Printf("\n✓ Bundle rendered successfully\n")
+        fmt.Printf("✓ %d files written to: %s\n", templatesRendered, outputPath)
+
+        return nil</span>
+}
+
+// parseVariables parses --var flags in the format key=value
+func parseVariables(varsList []string) (map[string]interface{}, error) <span class="cov5" title="4">{
+        variables := make(map[string]interface{})
+
+        for _, v := range varsList </span><span class="cov6" title="6">{
+                parts := strings.SplitN(v, "=", 2)
+                if len(parts) != 2 </span><span class="cov1" title="1">{
+                        return nil, fmt.Errorf("invalid variable format '%s', expected key=value", v)
+                }</span>
+
+                <span class="cov6" title="5">key := strings.TrimSpace(parts[0])
+                value := strings.TrimSpace(parts[1])
+
+                if key == "" </span><span class="cov1" title="1">{
+                        return nil, fmt.Errorf("variable key cannot be empty")
+                }</span>
+
+                <span class="cov5" title="4">variables[key] = value</span>
+        }
+
+        <span class="cov3" title="2">return variables, nil</span>
+}
+
+// parseVariablesWithTemplateOverrides parses --var flags supporting both:
+// - key=value (shared variable)
+// - template.yaml.tmpl:key=value (template-specific override)
+func parseVariablesWithTemplateOverrides(varsList []string) (map[string]interface{}, map[string]map[string]interface{}, error) <span class="cov8" title="9">{
+        sharedVars := make(map[string]interface{})
+        templateOverrides := make(map[string]map[string]interface{})
+
+        for _, v := range varsList </span><span class="cov10" title="15">{
+                // Split on '=' to get key=value
+                parts := strings.SplitN(v, "=", 2)
+                if len(parts) != 2 </span><span class="cov0" title="0">{
+                        return nil, nil, fmt.Errorf("invalid variable format '%s', expected key=value or template.tmpl:key=value", v)
+                }</span>
+
+                <span class="cov10" title="15">keyPart := strings.TrimSpace(parts[0])
+                value := strings.TrimSpace(parts[1])
+
+                if keyPart == "" </span><span class="cov0" title="0">{
+                        return nil, nil, fmt.Errorf("variable key cannot be empty")
+                }</span>
+
+                // Check if this is a template-specific override (contains ':')
+                <span class="cov10" title="15">if strings.Contains(keyPart, ":") </span><span class="cov8" title="9">{
+                        // Format: template.yaml.tmpl:key
+                        templateParts := strings.SplitN(keyPart, ":", 2)
+                        if len(templateParts) != 2 </span><span class="cov0" title="0">{
+                                return nil, nil, fmt.Errorf("invalid template override format '%s', expected template.tmpl:key=value", v)
+                        }</span>
+
+                        <span class="cov8" title="9">templateName := strings.TrimSpace(templateParts[0])
+                        varName := strings.TrimSpace(templateParts[1])
+
+                        if templateName == "" || varName == "" </span><span class="cov3" title="2">{
+                                return nil, nil, fmt.Errorf("template name and variable name cannot be empty in '%s'", v)
+                        }</span>
+
+                        // Validate that varName doesn't contain additional colons
+                        <span class="cov7" title="7">if strings.Contains(varName, ":") </span><span class="cov1" title="1">{
+                                return nil, nil, fmt.Errorf("invalid template override format '%s', too many colons (expected template.tmpl:key=value)", v)
+                        }</span>
+
+                        // Initialize map for this template if needed
+                        <span class="cov6" title="6">if templateOverrides[templateName] == nil </span><span class="cov6" title="5">{
+                                templateOverrides[templateName] = make(map[string]interface{})
+                        }</span>
+
+                        <span class="cov6" title="6">templateOverrides[templateName][varName] = value</span>
+                } else<span class="cov6" title="6"> {
+                        // Regular shared variable
+                        sharedVars[keyPart] = value
+                }</span>
+        }
+
+        <span class="cov6" title="6">return sharedVars, templateOverrides, nil</span>
+}
+
+// renderTemplate renders a Go template with the provided variables
+func renderTemplate(templateContent string, variables map[string]interface{}) (string, error) <span class="cov6" title="5">{
+        // Create a new template with strict error checking for missing keys
+        tmpl, err := template.New("template").Option("missingkey=error").Parse(templateContent)
+        if err != nil </span><span class="cov0" title="0">{
+                return "", fmt.Errorf("failed to parse template: %w", err)
+        }</span>
+
+        // Execute template with variables
+        <span class="cov6" title="5">var rendered bytes.Buffer
+        if err := tmpl.Execute(&amp;rendered, variables); err != nil </span><span class="cov0" title="0">{
+                return "", fmt.Errorf("failed to execute template: %w", err)
+        }</span>
+
+        <span class="cov6" title="5">return rendered.String(), nil</span>
+}
+
+// parseValues parses a values.yaml file
+func parseValues(valuesFile string) (map[string]interface{}, error) <span class="cov0" title="0">{
+        var values map[string]interface{}
+
+        // Read the values.yaml file provided
+        data, err := os.ReadFile(valuesFile)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("error reading values file: %w", err)
+        }</span>
+
+        // Unmarshal the data
+        <span class="cov0" title="0">if err := yaml.Unmarshal(data, &amp;values); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("error unmarshalling values yaml: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return values, nil</span>
+}
+
+// parseValuesWithOverrides parses a values.yaml file and extracts template-specific overrides
+// Returns: (shared variables, template overrides, error)
+func parseValuesWithOverrides(valuesFile string) (map[string]interface{}, map[string]map[string]interface{}, error) <span class="cov4" title="3">{
+        var allValues map[string]interface{}
+
+        // Read the values.yaml file
+        data, err := os.ReadFile(valuesFile)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, nil, fmt.Errorf("error reading values file: %w", err)
+        }</span>
+
+        // Unmarshal the data
+        <span class="cov4" title="3">if err := yaml.Unmarshal(data, &amp;allValues); err != nil </span><span class="cov0" title="0">{
+                return nil, nil, fmt.Errorf("error unmarshalling values yaml: %w", err)
+        }</span>
+
+        // Separate shared variables from template overrides
+        <span class="cov4" title="3">sharedVars := make(map[string]interface{})
+        templateOverrides := make(map[string]map[string]interface{})
+
+        for k, v := range allValues </span><span class="cov7" title="8">{
+                // Check if this is the template_overrides section
+                if k == "template_overrides" </span><span class="cov1" title="1">{
+                        // Parse template-specific overrides
+                        if overridesMap, ok := v.(map[string]interface{}); ok </span><span class="cov1" title="1">{
+                                for templateName, templateVars := range overridesMap </span><span class="cov3" title="2">{
+                                        if varsMap, ok := templateVars.(map[string]interface{}); ok </span><span class="cov3" title="2">{
+                                                templateOverrides[templateName] = varsMap
+                                        }</span>
+                                }
+                        }
+                } else<span class="cov7" title="7"> {
+                        // Regular shared variable
+                        sharedVars[k] = v
+                }</span>
+        }
+
+        <span class="cov4" title="3">return sharedVars, templateOverrides, nil</span>
+}
+
+// resolveBundleDirectory resolves a bundle name to its directory path
+// It scans all bundle directories and matches by bundle_name in metadata
+func resolveBundleDirectory(templatesDir, bundleName string) (string, error) <span class="cov5" title="4">{
+        bundlesPath := filepath.Join(templatesDir, "bundles")
+
+        // Read all bundle directories
+        entries, err := os.ReadDir(bundlesPath)
+        if err != nil </span><span class="cov0" title="0">{
+                return "", fmt.Errorf("failed to read bundles directory: %w", err)
+        }</span>
+
+        // Scan each directory for matching bundle_name in metadata
+        <span class="cov5" title="4">for _, entry := range entries </span><span class="cov4" title="3">{
+                if !entry.IsDir() </span><span class="cov0" title="0">{
+                        continue</span>
+                }
+
+                // Try to load metadata for this bundle directory
+                <span class="cov4" title="3">dirPath := filepath.Join(bundlesPath, entry.Name())
+                metadataPath := filepath.Join(dirPath, "conjure.json")
+
+                // Check if metadata exists
+                data, err := os.ReadFile(metadataPath)
+                if err != nil </span><span class="cov0" title="0">{
+                        continue</span> // Skip directories without metadata
+                }
+
+                // Parse metadata (conjure.json is JSON format)
+                <span class="cov4" title="3">var meta metadata.BundleMetadata
+                if err := json.Unmarshal(data, &amp;meta); err != nil </span><span class="cov0" title="0">{
+                        continue</span> // Skip if can't parse
+                }
+
+                // Check if bundle_name matches
+                <span class="cov4" title="3">if meta.BundleName == bundleName </span><span class="cov4" title="3">{
+                        return dirPath, nil
+                }</span>
+        }
+
+        <span class="cov1" title="1">return "", fmt.Errorf("bundle '%s' not found (searched by bundle_name in metadata)", bundleName)</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package list
+
+import (
+        "fmt"
+        "os"
+
+        "github.com/spf13/cobra"
+        "github.com/thesudoYT/conjure/internal/config"
+)
+
+// listCmd represents the list command
+var ListCmd = &amp;cobra.Command{
+        Use:   "list",
+        Short: "List the available templates and bundles",
+        Long: `List the available templates and bundles.
+
+Example: conjure list templates,
+         conjure list bundles,
+         conjure list templates -t yaml,
+         conjure list bundles -t kubernetes`,
+        Run: func(cmd *cobra.Command, args []string) <span class="cov0" title="0">{
+                // Create AppConfig from the LoadConfig unmarshal function. Refer to AppConfig anywhere in the code.
+                cfg, err := config.LoadConfig()
+                if err != nil </span><span class="cov0" title="0">{
+                        fmt.Printf("Error loading config: %v\n", err)
+                        os.Exit(1)
+                }</span>
+                <span class="cov0" title="0">fmt.Println("list called")
+                fmt.Println(cfg.TemplatesDir)
+                fmt.Println(cfg.BundlesDir)</span>
+        },
+}
+
+func init() <span class="cov8" title="1">{
+        // Here you will define your flags and configuration settings.
+
+        // Cobra supports Persistent Flags which will work for this command
+        // and all subcommands, e.g.:
+        // listCmd.PersistentFlags().String("foo", "", "A help for foo")
+        ListCmd.PersistentFlags().String("templates", "", "list single file templates such as secret.yaml or s3.tf")
+        ListCmd.PersistentFlags().String("bundles", "", "list compiled bundles that consist of multiple templates.")
+
+        // Cobra supports local flags which will only run when this command
+        // is called directly, e.g.:
+        // listCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+}</span>
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package list
+
+import (
+        "encoding/json"
+        "fmt"
+        "os"
+        "path/filepath"
+
+        "github.com/spf13/cobra"
+        "github.com/thesudoYT/conjure/internal/config"
+)
+
+type BundleMetadata struct {
+        BundleType        string `json:"bundle_type"`
+        BundleName        string `json:"bundle_name"`
+        BundleDescription string `json:"bundle_description"`
+}
+
+// AllowedBundleTypes defines the permitted bundle types
+var AllowedBundleTypes = []string{"kubernetes", "terraform"}
+
+// isValidBundleType checks if a type is in the allowed list
+func isValidBundleType(bundleType string) bool <span class="cov6" title="4">{
+        for _, allowed := range AllowedBundleTypes </span><span class="cov8" title="7">{
+                if bundleType == allowed </span><span class="cov3" title="2">{
+                        return true
+                }</span>
+        }
+        <span class="cov3" title="2">return false</span>
+}
+
+var (
+        // `conjure list bundles` command
+        listBundlesCmd = &amp;cobra.Command{
+                Use:   "bundles",
+                Short: "List bundles",
+                Long:  "List available bundles in the bundles_dir/bundles directory.",
+                PreRunE: func(cmd *cobra.Command, args []string) error <span class="cov0" title="0">{
+                        // Validate --type flag if provided
+                        bundleType, _ := cmd.Flags().GetString("type")
+                        if bundleType != "" &amp;&amp; !isValidBundleType(bundleType) </span><span class="cov0" title="0">{
+                                return fmt.Errorf("invalid bundle type '%s'. Allowed types: %v", bundleType, AllowedBundleTypes)
+                        }</span>
+                        <span class="cov0" title="0">return nil</span>
+                },
+                Run: func(cmd *cobra.Command, args []string) <span class="cov0" title="0">{
+                        bundleType, _ := cmd.Flags().GetString("type")
+                        listBundles(bundleType)
+                }</span>,
+                PostRun: func(cmd *cobra.Command, args []string) {<span class="cov0" title="0">
+                }</span>,
+        }
+)
+
+func init() <span class="cov1" title="1">{
+        // Add commands
+        ListCmd.AddCommand(listBundlesCmd)
+
+        // Add flags
+        listBundlesCmd.Flags().StringP("type", "t", "", "Filter bundles by type (kubernetes, terraform)")
+}</span>
+
+func listBundles(filterType string) <span class="cov8" title="6">{
+        // Load configuration
+        cfg, err := config.LoadConfig()
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Printf("Error loading config: %v\n", err)
+                os.Exit(1)
+        }</span>
+
+        // Build the path to bundles directory
+        <span class="cov8" title="6">bundlesPath := filepath.Join(cfg.BundlesDir, "bundles")
+
+        // Check if the directory exists
+        if _, err := os.Stat(bundlesPath); os.IsNotExist(err) </span><span class="cov0" title="0">{
+                fmt.Printf("Error: bundles directory does not exist at %s\n", bundlesPath)
+                fmt.Printf("Please ensure %s/bundles exists\n", cfg.BundlesDir)
+                os.Exit(1)
+        }</span>
+
+        // Read directory contents
+        <span class="cov8" title="6">entries, err := os.ReadDir(bundlesPath)
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Printf("Error reading bundles directory: %v\n", err)
+                os.Exit(1)
+        }</span>
+
+        // Print bundles
+        <span class="cov8" title="6">if len(entries) == 0 </span><span class="cov1" title="1">{
+                fmt.Println("No bundles found")
+                return
+        }</span>
+
+        <span class="cov7" title="5">if filterType != "" </span><span class="cov3" title="2">{
+                fmt.Printf("Available bundles (type: %s):\n", filterType)
+        }</span> else<span class="cov5" title="3"> {
+                fmt.Println("Available bundles:")
+        }</span>
+        <span class="cov7" title="5">fmt.Println()
+
+        bundlesFound := 0
+        for _, entry := range entries </span><span class="cov10" title="9">{
+                // Only process directories
+                if !entry.IsDir() </span><span class="cov1" title="1">{
+                        continue</span>
+                }
+
+                // Build path to conjure.json
+                <span class="cov9" title="8">bundleDir := filepath.Join(bundlesPath, entry.Name())
+                metadataPath := filepath.Join(bundleDir, "conjure.json")
+
+                // Read and parse conjure.json
+                data, err := os.ReadFile(metadataPath)
+                if err != nil </span><span class="cov1" title="1">{
+                        fmt.Printf("  [%s] - No metadata file found (conjure.json missing)\n", entry.Name())
+                        continue</span>
+                }
+
+                <span class="cov8" title="7">var metadata BundleMetadata
+                if err := json.Unmarshal(data, &amp;metadata); err != nil </span><span class="cov0" title="0">{
+                        fmt.Printf("  [%s] - Invalid metadata file (failed to parse conjure.json)\n", entry.Name())
+                        continue</span>
+                }
+
+                // Filter by type if specified
+                <span class="cov8" title="7">if filterType != "" &amp;&amp; metadata.BundleType != filterType </span><span class="cov3" title="2">{
+                        continue</span>
+                }
+
+                // Display bundle metadata
+                <span class="cov7" title="5">fmt.Printf("  Name: %s\n", metadata.BundleName)
+                fmt.Printf("  Type: %s\n", metadata.BundleType)
+                fmt.Printf("  Description: %s\n", metadata.BundleDescription)
+                fmt.Println()
+                bundlesFound++</span>
+        }
+
+        <span class="cov7" title="5">if bundlesFound == 0 &amp;&amp; filterType != "" </span><span class="cov1" title="1">{
+                fmt.Printf("No bundles found with type '%s'\n", filterType)
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package list
+
+import (
+        "fmt"
+        "os"
+        "path/filepath"
+        "strings"
+
+        "github.com/spf13/cobra"
+        "github.com/thesudoYT/conjure/internal/config"
+)
+
+// AllowedTemplateTypes defines the permitted template file extensions
+var AllowedTemplateTypes = []string{".yaml", ".tf", ".json"}
+
+// isValidTemplateType checks if a file extension is in the allowed list
+func isValidTemplateType(fileType string) bool <span class="cov7" title="7">{
+        // Ensure the extension starts with a dot
+        if !strings.HasPrefix(fileType, ".") </span><span class="cov3" title="2">{
+                fileType = "." + fileType
+        }</span>
+
+        <span class="cov7" title="7">for _, allowed := range AllowedTemplateTypes </span><span class="cov10" title="15">{
+                if fileType == allowed </span><span class="cov6" title="5">{
+                        return true
+                }</span>
+        }
+        <span class="cov3" title="2">return false</span>
+}
+
+var (
+        // `conjure list templates` command
+        listTemplatesCmd = &amp;cobra.Command{
+                Use:   "templates",
+                Short: "List templates",
+                Long: `List available templates in the templates_dir/templates directory.
+
+Templates should be named with the pattern: &lt;name&gt;.&lt;type&gt;.tmpl
+Examples: vsphere_vm.tf.tmpl, deployment.yaml.tmpl, config.json.tmpl
+
+The .tmpl extension is hidden in the output for clarity.`,
+                PreRunE: func(cmd *cobra.Command, args []string) error <span class="cov0" title="0">{
+                        // Validate --type flag if provided
+                        templateType, _ := cmd.Flags().GetString("type")
+                        if templateType != "" &amp;&amp; !isValidTemplateType(templateType) </span><span class="cov0" title="0">{
+                                return fmt.Errorf("invalid template type '%s'. Allowed types: %v", templateType, AllowedTemplateTypes)
+                        }</span>
+                        <span class="cov0" title="0">return nil</span>
+                },
+                Run: func(cmd *cobra.Command, args []string) <span class="cov0" title="0">{
+                        templateType, _ := cmd.Flags().GetString("type")
+                        listTemplates(templateType)
+                }</span>,
+                PostRun: func(cmd *cobra.Command, args []string) {<span class="cov0" title="0">
+                }</span>,
+        }
+)
+
+func init() <span class="cov1" title="1">{
+        // Add commands
+        ListCmd.AddCommand(listTemplatesCmd)
+
+        // Add flags
+        listTemplatesCmd.Flags().StringP("type", "t", "", "Filter templates by file extension (.yaml, .tf, .json)")
+}</span>
+
+func listTemplates(filterType string) <span class="cov6" title="6">{
+        // Load configuration
+        cfg, err := config.LoadConfig()
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Printf("Error loading config: %v\n", err)
+                os.Exit(1)
+        }</span>
+
+        // Build the path to templates directory
+        <span class="cov6" title="6">templatesPath := filepath.Join(cfg.TemplatesDir, "templates")
+
+        // Check if the directory exists
+        if _, err := os.Stat(templatesPath); os.IsNotExist(err) </span><span class="cov0" title="0">{
+                fmt.Printf("Error: templates directory does not exist at %s\n", templatesPath)
+                fmt.Printf("Please ensure %s/templates exists\n", cfg.TemplatesDir)
+                os.Exit(1)
+        }</span>
+
+        // Read directory contents
+        <span class="cov6" title="6">entries, err := os.ReadDir(templatesPath)
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Printf("Error reading templates directory: %v\n", err)
+                os.Exit(1)
+        }</span>
+
+        // Print templates
+        <span class="cov6" title="6">if len(entries) == 0 </span><span class="cov1" title="1">{
+                fmt.Println("No templates found")
+                return
+        }</span>
+
+        // Normalize filterType to include dot prefix
+        <span class="cov6" title="5">if filterType != "" &amp;&amp; !strings.HasPrefix(filterType, ".") </span><span class="cov1" title="1">{
+                filterType = "." + filterType
+        }</span>
+
+        <span class="cov6" title="5">if filterType != "" </span><span class="cov4" title="3">{
+                fmt.Printf("Available templates (type: %s):\n", filterType)
+        }</span> else<span class="cov3" title="2"> {
+                fmt.Println("Available templates:")
+        }</span>
+
+        <span class="cov6" title="5">templatesFound := 0
+        for _, entry := range entries </span><span class="cov9" title="14">{
+                // Skip directories
+                if entry.IsDir() </span><span class="cov0" title="0">{
+                        continue</span>
+                }
+
+                // Only show files ending in .tmpl
+                <span class="cov9" title="14">if !strings.HasSuffix(entry.Name(), ".tmpl") </span><span class="cov3" title="2">{
+                        continue</span>
+                }
+
+                // Get the name without .tmpl extension
+                <span class="cov9" title="12">nameWithoutTmpl := strings.TrimSuffix(entry.Name(), ".tmpl")
+
+                // Filter by file type if specified
+                // For a template named "vsphere_vm.tf.tmpl", we check if it ends with ".tf"
+                if filterType != "" </span><span class="cov7" title="7">{
+                        if !strings.HasSuffix(nameWithoutTmpl, filterType) </span><span class="cov5" title="4">{
+                                continue</span>
+                        }
+                }
+
+                // Display the template name without .tmpl (e.g., "vsphere_vm.tf" instead of "vsphere_vm.tf.tmpl")
+                <span class="cov7" title="8">fmt.Printf("  %s\n", nameWithoutTmpl)
+                templatesFound++</span>
+        }
+
+        <span class="cov6" title="5">if templatesFound == 0 &amp;&amp; filterType != "" </span><span class="cov1" title="1">{
+                fmt.Printf("\nNo templates found with extension '%s'\n", filterType)
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">/*
+Copyright © 2025 NAME HERE &lt;EMAIL ADDRESS&gt;
+*/
+package cmd
+
+import (
+        "fmt"
+        "os"
+
+        "github.com/spf13/cobra"
+        "github.com/spf13/viper"
+        "github.com/thesudoYT/conjure/cmd/bundle"
+        "github.com/thesudoYT/conjure/cmd/list"
+        "github.com/thesudoYT/conjure/cmd/template"
+)
+
+var cfgFile string
+
+// rootCmd represents the base command when called without any subcommands
+var rootCmd = &amp;cobra.Command{
+        Use:   "conjure",
+        Short: "Template and configuration management tool",
+        Long: `Conjure is a CLI tool for managing and generating files from templates.
+
+Conjure allows you to create reusable templates and bundles with variable
+substitution, metadata, and interactive prompts for consistent configuration
+management across your infrastructure.
+
+Examples:
+  conjure template deployment.yaml -o ./deployment.yaml
+  conjure bundle kubernetes_deployment -o ./k8s/
+  conjure list templates
+  conjure list bundles`,
+}
+
+// Execute adds all child commands to the root command and sets flags appropriately.
+// This is called by main.main(). It only needs to happen once to the rootCmd.
+func Execute() <span class="cov0" title="0">{
+        err := rootCmd.Execute()
+        if err != nil </span><span class="cov0" title="0">{
+                os.Exit(1)
+        }</span>
+}
+
+func init() <span class="cov0" title="0">{
+        cobra.OnInitialize(initConfig) // load the config into the config struct at runtime
+
+        // Here you will define your flags and configuration settings.
+        // Cobra supports persistent flags, which, if defined here,
+        // will be global for your application.
+
+        rootCmd.PersistentFlags().StringVar(&amp;cfgFile, "config", "", "config file (default is $HOME/.conjure.yaml)")
+
+        rootCmd.AddCommand(list.ListCmd)
+        rootCmd.AddCommand(template.TemplateCmd)
+        rootCmd.AddCommand(bundle.BundleCmd)
+
+        // Cobra also supports local flags, which will only run
+        // when this action is called directly.
+        rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+}</span>
+
+// initConfig reads in config file and ENV variables if set.
+func initConfig() <span class="cov0" title="0">{
+        if cfgFile != "" </span><span class="cov0" title="0">{
+                // Use config file from the flag.
+                viper.SetConfigFile(cfgFile)
+        }</span> else<span class="cov0" title="0"> {
+                // Find home directory.
+                home, err := os.UserHomeDir()
+                cobra.CheckErr(err)
+
+                // Search config in home directory with name ".conjure" (without extension).
+                viper.AddConfigPath(home)
+                viper.SetConfigType("yaml")
+                viper.SetConfigName(".conjure")
+        }</span>
+
+        <span class="cov0" title="0">viper.AutomaticEnv()           // read in environment variables that match
+        viper.SetEnvPrefix("CONJURE")  // prefix CONJURE_ before env vars e.g. CONJURE_TEMPLATES_DIR
+        viper.BindEnv("TEMPLATES_DIR") // path to a directory containing templates.
+
+        // If a config file is found, read it in.
+        if err := viper.ReadInConfig(); err == nil </span><span class="cov0" title="0">{
+                fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">/*
+Copyright © 2025 NAME HERE &lt;EMAIL ADDRESS&gt;
+*/
+package template
+
+import (
+        "bytes"
+        "fmt"
+        "os"
+        "path/filepath"
+        "strings"
+        "text/template"
+
+        "github.com/spf13/cobra"
+        "github.com/thesudoYT/conjure/internal/config"
+        "github.com/thesudoYT/conjure/internal/metadata"
+        "github.com/thesudoYT/conjure/internal/prompt"
+        "go.yaml.in/yaml/v3"
+)
+
+// TemplateCmd represents the template command
+var TemplateCmd = &amp;cobra.Command{
+        Use:   "template &lt;template-name&gt;",
+        Short: "Generate a file from a template",
+        Long: `Generate a file from a template with variable substitution.
+
+Templates are named with the pattern: &lt;name&gt;.&lt;type&gt;.tmpl (e.g., deployment.yaml.tmpl)
+The template name should not include the .tmpl extension when invoking.
+
+Examples:
+  conjure template deployment.yaml -o ./deployment.yaml
+  conjure template deployment.yaml -o ./deployment.yaml -f values.yaml
+  conjure template vsphere_vm.tf -o ./main.tf --var vm_name=myvm --var cpu=4`,
+        Args: cobra.ExactArgs(1),
+        Run: func(cmd *cobra.Command, args []string) <span class="cov0" title="0">{
+                templateName := args[0]
+                outputPath, _ := cmd.Flags().GetString("output")
+                vars, _ := cmd.Flags().GetStringArray("var")
+                valuesFile, _ := cmd.Flags().GetString("values")
+
+                // Determine if interactive mode should be enabled
+                // If -i flag was explicitly set, use that value
+                // Otherwise, enable interactive if no --var or -f flags provided
+                interactive := cmd.Flags().Changed("interactive")
+                if interactive </span><span class="cov0" title="0">{
+                        interactive, _ = cmd.Flags().GetBool("interactive")
+                }</span> else<span class="cov0" title="0"> {
+                        // Auto-enable interactive if no variables provided
+                        interactive = len(vars) == 0 &amp;&amp; valuesFile == ""
+                }</span>
+
+                <span class="cov0" title="0">if err := generateTemplate(templateName, outputPath, vars, interactive, valuesFile); err != nil </span><span class="cov0" title="0">{
+                        fmt.Printf("Error generating template: %v\n", err)
+                        os.Exit(1)
+                }</span>
+        },
+}
+
+func init() <span class="cov1" title="1">{
+        // Add flags
+        TemplateCmd.Flags().StringP("output", "o", "", "Output file path (required)")
+        TemplateCmd.MarkFlagRequired("output")
+        TemplateCmd.Flags().StringArrayP("var", "v", []string{}, "Set template variables (format: key=value)")
+        TemplateCmd.Flags().BoolP("interactive", "i", false, "Enable/disable interactive mode (default: auto-enabled when no --var or -f provided)")
+        TemplateCmd.Flags().StringP("values", "f", "", "Provide variables using a values.yaml file")
+}</span>
+
+func generateTemplate(templateName, outputPath string, varsList []string, interactive bool, valuesFile string) error <span class="cov7" title="6">{
+        // Load configuration
+        cfg, err := config.LoadConfig()
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to load config: %w", err)
+        }</span>
+
+        // Build path to template file
+        <span class="cov7" title="6">templatePath := filepath.Join(cfg.TemplatesDir, "templates", templateName+".tmpl")
+
+        // Check if template exists
+        if _, err := os.Stat(templatePath); os.IsNotExist(err) </span><span class="cov1" title="1">{
+                return fmt.Errorf("template file does not exist: %s", templatePath)
+        }</span>
+
+        // Read template file
+        <span class="cov7" title="5">templateContent, err := os.ReadFile(templatePath)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to read template file: %w", err)
+        }</span>
+
+        // Start with an empty variables map
+        <span class="cov7" title="5">userVariables := make(map[string]interface{})
+
+        // First, load values from values.yaml file if provided
+        if valuesFile != "" </span><span class="cov5" title="3">{
+                values, err := parseValues(valuesFile)
+                if err != nil </span><span class="cov1" title="1">{
+                        return fmt.Errorf("failed to parse values file: %w", err)
+                }</span>
+                // Copy values from YAML into userVariables
+                <span class="cov3" title="2">for k, v := range values </span><span class="cov7" title="6">{
+                        userVariables[k] = v
+                }</span>
+        }
+
+        // Then, parse variables from --var flags (these override values.yaml)
+        <span class="cov6" title="4">cliVariables, err := parseVariables(varsList)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to parse variables: %w", err)
+        }</span>
+        // Merge CLI variables, overriding any values from YAML
+        <span class="cov6" title="4">for k, v := range cliVariables </span><span class="cov5" title="3">{
+                userVariables[k] = v
+        }</span>
+
+        // Try to load metadata file
+        <span class="cov6" title="4">metadataPath := metadata.GetMetadataPath(cfg.TemplatesDir, templateName)
+        var finalVariables map[string]interface{}
+
+        if _, err := os.Stat(metadataPath); err == nil </span><span class="cov1" title="1">{
+                // Metadata file exists - load and validate
+                meta, err := metadata.LoadTemplateMetadata(metadataPath)
+                if err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("failed to load metadata: %w", err)
+                }</span>
+
+                <span class="cov1" title="1">fmt.Printf("Using metadata: %s\n\n", meta.Description)
+
+                // If interactive mode is enabled, prompt for variables
+                if interactive </span><span class="cov0" title="0">{
+                        // Use interactive prompts to collect variables
+                        finalVariables, err = prompt.CollectVariables(meta, userVariables)
+                        if err != nil </span><span class="cov0" title="0">{
+                                return fmt.Errorf("failed to collect variables: %w", err)
+                        }</span>
+                } else<span class="cov1" title="1"> {
+                        // Non-interactive mode - validate and merge with defaults
+                        finalVariables, err = metadata.ValidateAndMergeVariables(meta, userVariables)
+                        if err != nil </span><span class="cov0" title="0">{
+                                return fmt.Errorf("variable validation failed: %w", err)
+                        }</span>
+                }
+
+                // Show what variables are being used
+                <span class="cov1" title="1">fmt.Println("\nVariables:")
+                for _, v := range meta.Variables </span><span class="cov3" title="2">{
+                        if val, exists := finalVariables[v.Name]; exists </span><span class="cov3" title="2">{
+                                fmt.Printf("  %s = %v\n", v.Name, val)
+                        }</span>
+                }
+                <span class="cov1" title="1">fmt.Println()</span>
+        } else<span class="cov5" title="3"> {
+                // No metadata file - use variables as-is (legacy mode)
+                fmt.Println("Warning: No metadata file found, using variables without validation")
+                finalVariables = userVariables
+        }</span>
+
+        // Render template
+        <span class="cov6" title="4">rendered, err := renderTemplate(string(templateContent), finalVariables)
+        if err != nil </span><span class="cov1" title="1">{
+                return fmt.Errorf("failed to render template: %w", err)
+        }</span>
+
+        // Create output directory if it doesn't exist
+        <span class="cov5" title="3">outputDir := filepath.Dir(outputPath)
+        if err := os.MkdirAll(outputDir, 0755); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to create output directory: %w", err)
+        }</span>
+
+        // Write rendered content to output file
+        <span class="cov5" title="3">if err := os.WriteFile(outputPath, []byte(rendered), 0644); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to write output file: %w", err)
+        }</span>
+
+        <span class="cov5" title="3">fmt.Printf("✓ Template rendered successfully\n")
+        fmt.Printf("✓ Output written to: %s\n", outputPath)
+
+        return nil</span>
+}
+
+// parseVariables parses --var flags in the format key=value
+func parseVariables(varsList []string) (map[string]interface{}, error) <span class="cov8" title="8">{
+        variables := make(map[string]interface{})
+
+        for _, v := range varsList </span><span class="cov9" title="10">{
+                parts := strings.SplitN(v, "=", 2)
+                if len(parts) != 2 </span><span class="cov1" title="1">{
+                        return nil, fmt.Errorf("invalid variable format '%s', expected key=value", v)
+                }</span>
+
+                <span class="cov9" title="9">key := strings.TrimSpace(parts[0])
+                value := strings.TrimSpace(parts[1])
+
+                if key == "" </span><span class="cov1" title="1">{
+                        return nil, fmt.Errorf("variable key cannot be empty")
+                }</span>
+
+                <span class="cov8" title="8">variables[key] = value</span>
+        }
+
+        <span class="cov7" title="6">return variables, nil</span>
+}
+
+// renderTemplate renders a Go template with the provided variables
+func renderTemplate(templateContent string, variables map[string]interface{}) (string, error) <span class="cov10" title="11">{
+        // Create a new template with strict error checking for missing keys
+        tmpl, err := template.New("template").Option("missingkey=error").Parse(templateContent)
+        if err != nil </span><span class="cov1" title="1">{
+                return "", fmt.Errorf("failed to parse template: %w", err)
+        }</span>
+
+        // Execute template with variables
+        <span class="cov9" title="10">var rendered bytes.Buffer
+        if err := tmpl.Execute(&amp;rendered, variables); err != nil </span><span class="cov3" title="2">{
+                return "", fmt.Errorf("failed to execute template: %w", err)
+        }</span>
+
+        <span class="cov8" title="8">return rendered.String(), nil</span>
+}
+
+// parseValues parses a values.yaml file
+func parseValues(valuesFile string) (map[string]interface{}, error) <span class="cov7" title="6">{
+        var values map[string]interface{}
+
+        // Read the values.yaml file provided
+        data, err := os.ReadFile(valuesFile)
+        if err != nil </span><span class="cov1" title="1">{
+                return nil, fmt.Errorf("error reading values file: %w", err)
+        }</span>
+
+        // Unmarshal the data
+        <span class="cov7" title="5">if err := yaml.Unmarshal(data, &amp;values); err != nil </span><span class="cov3" title="2">{
+                return nil, fmt.Errorf("error unmarshalling values yaml: %w", err)
+        }</span>
+
+        <span class="cov5" title="3">return values, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package config
+
+import (
+        "github.com/spf13/viper"
+)
+
+type Config struct {
+        TemplatesDir string `mapstructure:"templates_dir"`
+        BundlesDir   string `mapstructure:"bundles_dir"`
+}
+
+func LoadConfig() (*Config, error) <span class="cov0" title="0">{
+        var cfg Config
+
+        // Unmarshal viper config into struct
+        if err := viper.Unmarshal(&amp;cfg); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">return &amp;cfg, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package metadata
+
+import (
+        "encoding/json"
+        "fmt"
+        "os"
+        "path/filepath"
+)
+
+// TemplateMetadata defines the structure of template metadata files
+type TemplateMetadata struct {
+        TemplateName string     `json:"template_name"`
+        Description  string     `json:"description"`
+        Variables    []Variable `json:"variables"`
+}
+
+// Variable defines a template variable
+type Variable struct {
+        Name        string `json:"name"`
+        Description string `json:"description"`
+        Type        string `json:"type"`     // "string", "int", "bool"
+        Required    bool   `json:"required"` // Is this variable required?
+        Default     string `json:"default"`  // Default value if not provided
+}
+
+// LoadTemplateMetadata loads metadata from a .json file
+func LoadTemplateMetadata(metadataPath string) (*TemplateMetadata, error) <span class="cov0" title="0">{
+        // Check if metadata file exists
+        if _, err := os.Stat(metadataPath); os.IsNotExist(err) </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("metadata file does not exist: %s", metadataPath)
+        }</span>
+
+        // Read metadata file
+        <span class="cov0" title="0">data, err := os.ReadFile(metadataPath)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to read metadata file: %w", err)
+        }</span>
+
+        // Parse JSON
+        <span class="cov0" title="0">var metadata TemplateMetadata
+        if err := json.Unmarshal(data, &amp;metadata); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to parse metadata JSON: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return &amp;metadata, nil</span>
+}
+
+// ValidateAndMergeVariables validates user-provided variables against metadata
+// and merges them with defaults. Returns final variable map or error.
+func ValidateAndMergeVariables(metadata *TemplateMetadata, userVars map[string]interface{}) (map[string]interface{}, error) <span class="cov0" title="0">{
+        finalVars := make(map[string]interface{})
+
+        // Process each variable defined in metadata
+        for _, v := range metadata.Variables </span><span class="cov0" title="0">{
+                // Check if user provided this variable
+                if userValue, exists := userVars[v.Name]; exists </span><span class="cov0" title="0">{
+                        // User provided the value
+                        finalVars[v.Name] = userValue
+                }</span> else<span class="cov0" title="0"> if v.Default != "" </span><span class="cov0" title="0">{
+                        // Use default value
+                        finalVars[v.Name] = v.Default
+                }</span> else<span class="cov0" title="0"> if v.Required </span><span class="cov0" title="0">{
+                        // Required but not provided and no default
+                        return nil, fmt.Errorf("required variable '%s' not provided (%s)", v.Name, v.Description)
+                }</span>
+                // If not required and no default, skip (variable won't be in final map)
+        }
+
+        <span class="cov0" title="0">return finalVars, nil</span>
+}
+
+// GetMetadataPath returns the expected metadata file path for a template
+func GetMetadataPath(templatesDir, templateName string) string <span class="cov0" title="0">{
+        return filepath.Join(templatesDir, "templates", templateName+".json")
+}</span>
+
+// BundleMetadata defines the structure of bundle metadata files (conjure.json)
+type BundleMetadata struct {
+        BundleType        string                       `json:"bundle_type"`
+        BundleName        string                       `json:"bundle_name"`
+        BundleDescription string                       `json:"bundle_description"`
+        SharedVariables   []Variable                   `json:"shared_variables"`
+        TemplateVariables map[string][]Variable        `json:"template_variables"`
+}
+
+// LoadBundleMetadata loads metadata from a bundle's conjure.json file
+func LoadBundleMetadata(metadataPath string) (*BundleMetadata, error) <span class="cov0" title="0">{
+        // Check if metadata file exists
+        if _, err := os.Stat(metadataPath); os.IsNotExist(err) </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("bundle metadata file does not exist: %s", metadataPath)
+        }</span>
+
+        // Read metadata file
+        <span class="cov0" title="0">data, err := os.ReadFile(metadataPath)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to read bundle metadata file: %w", err)
+        }</span>
+
+        // Parse JSON
+        <span class="cov0" title="0">var metadata BundleMetadata
+        if err := json.Unmarshal(data, &amp;metadata); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to parse bundle metadata JSON: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return &amp;metadata, nil</span>
+}
+
+// MergeVariablesForTemplate merges variables for a specific template in a bundle
+// Precedence: shared defaults &lt; template-specific defaults &lt; user values
+func MergeVariablesForTemplate(metadata *BundleMetadata, templateName string, userVars map[string]interface{}) (map[string]interface{}, error) <span class="cov10" title="8">{
+        finalVars := make(map[string]interface{})
+
+        // Start with shared variable defaults
+        for _, v := range metadata.SharedVariables </span><span class="cov10" title="8">{
+                if v.Default != "" </span><span class="cov8" title="6">{
+                        finalVars[v.Name] = v.Default
+                }</span>
+        }
+
+        // Override with template-specific variable defaults
+        <span class="cov10" title="8">if templateVars, exists := metadata.TemplateVariables[templateName]; exists </span><span class="cov5" title="3">{
+                for _, v := range templateVars </span><span class="cov5" title="3">{
+                        if v.Default != "" </span><span class="cov4" title="2">{
+                                finalVars[v.Name] = v.Default
+                        }</span>
+                }
+        }
+
+        // Override with user-provided values
+        <span class="cov10" title="8">for k, v := range userVars </span><span class="cov5" title="3">{
+                finalVars[k] = v
+        }</span>
+
+        // Validate required variables
+        // Check shared variables
+        <span class="cov10" title="8">for _, v := range metadata.SharedVariables </span><span class="cov10" title="8">{
+                if v.Required </span><span class="cov4" title="2">{
+                        if _, exists := finalVars[v.Name]; !exists </span><span class="cov1" title="1">{
+                                return nil, fmt.Errorf("required shared variable '%s' not provided (%s)", v.Name, v.Description)
+                        }</span>
+                }
+        }
+
+        // Check template-specific variables
+        <span class="cov9" title="7">if templateVars, exists := metadata.TemplateVariables[templateName]; exists </span><span class="cov5" title="3">{
+                for _, v := range templateVars </span><span class="cov5" title="3">{
+                        if v.Required </span><span class="cov1" title="1">{
+                                if _, exists := finalVars[v.Name]; !exists </span><span class="cov1" title="1">{
+                                        return nil, fmt.Errorf("required variable '%s' not provided for template '%s' (%s)", v.Name, templateName, v.Description)
+                                }</span>
+                        }
+                }
+        }
+
+        <span class="cov8" title="6">return finalVars, nil</span>
+}
+
+// GetBundleMetadataPath returns the expected metadata file path for a bundle
+func GetBundleMetadataPath(templatesDir, bundleName string) string <span class="cov0" title="0">{
+        return filepath.Join(templatesDir, "bundles", bundleName, "conjure.json")
+}</span>
+
+// GetAllVariablesForBundle returns all variables (shared + all template-specific) for interactive prompting
+func GetAllVariablesForBundle(metadata *BundleMetadata) []Variable <span class="cov4" title="2">{
+        varMap := make(map[string]Variable)
+
+        // Add shared variables
+        for _, v := range metadata.SharedVariables </span><span class="cov5" title="3">{
+                varMap[v.Name] = v
+        }</span>
+
+        // Add template-specific variables (will override shared if same name)
+        <span class="cov4" title="2">for _, templateVars := range metadata.TemplateVariables </span><span class="cov5" title="3">{
+                for _, v := range templateVars </span><span class="cov5" title="3">{
+                        // Only add if not already in map, or if it's a different definition
+                        if _, exists := varMap[v.Name]; !exists </span><span class="cov4" title="2">{
+                                varMap[v.Name] = v
+                        }</span>
+                }
+        }
+
+        // Convert map to slice
+        <span class="cov4" title="2">vars := make([]Variable, 0, len(varMap))
+        for _, v := range varMap </span><span class="cov7" title="5">{
+                vars = append(vars, v)
+        }</span>
+
+        <span class="cov4" title="2">return vars</span>
+}
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package prompt
+
+import (
+        "fmt"
+        "strings"
+
+        tea "github.com/charmbracelet/bubbletea"
+        "github.com/charmbracelet/lipgloss"
+        "github.com/thesudoYT/conjure/internal/metadata"
+)
+
+var (
+        titleStyle = lipgloss.NewStyle().
+                        Bold(true).
+                        Foreground(lipgloss.Color("99"))
+
+        promptStyle = lipgloss.NewStyle().
+                        Foreground(lipgloss.Color("86"))
+
+        descriptionStyle = lipgloss.NewStyle().
+                                Foreground(lipgloss.Color("241"))
+
+        inputStyle = lipgloss.NewStyle().
+                        Foreground(lipgloss.Color("219"))
+
+        successStyle = lipgloss.NewStyle().
+                        Foreground(lipgloss.Color("42"))
+)
+
+type model struct {
+        metadata      *metadata.TemplateMetadata
+        currentIndex  int
+        values        map[string]interface{}
+        currentInput  string
+        finished      bool
+        err           error
+}
+
+func initialModel(meta *metadata.TemplateMetadata) model <span class="cov0" title="0">{
+        return model{
+                metadata:     meta,
+                currentIndex: 0,
+                values:       make(map[string]interface{}),
+                currentInput: "",
+                finished:     false,
+        }
+}</span>
+
+func (m model) Init() tea.Cmd <span class="cov0" title="0">{
+        return nil
+}</span>
+
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) <span class="cov0" title="0">{
+        switch msg := msg.(type) </span>{
+        case tea.KeyMsg:<span class="cov0" title="0">
+                switch msg.String() </span>{
+                case "ctrl+c", "esc":<span class="cov0" title="0">
+                        m.err = fmt.Errorf("cancelled by user")
+                        m.finished = true
+                        return m, tea.Quit</span>
+
+                case "enter":<span class="cov0" title="0">
+                        // Get current variable
+                        if m.currentIndex &gt;= len(m.metadata.Variables) </span><span class="cov0" title="0">{
+                                return m, nil
+                        }</span>
+
+                        <span class="cov0" title="0">currentVar := m.metadata.Variables[m.currentIndex]
+
+                        // Store the value or use default
+                        if m.currentInput == "" &amp;&amp; currentVar.Default != "" </span><span class="cov0" title="0">{
+                                m.values[currentVar.Name] = currentVar.Default
+                        }</span> else<span class="cov0" title="0"> if m.currentInput == "" &amp;&amp; currentVar.Required </span><span class="cov0" title="0">{
+                                // Required but empty - don't advance
+                                return m, nil
+                        }</span> else<span class="cov0" title="0"> if m.currentInput != "" </span><span class="cov0" title="0">{
+                                m.values[currentVar.Name] = m.currentInput
+                        }</span>
+
+                        // Move to next variable
+                        <span class="cov0" title="0">m.currentIndex++
+                        m.currentInput = ""
+
+                        // Check if we're done
+                        if m.currentIndex &gt;= len(m.metadata.Variables) </span><span class="cov0" title="0">{
+                                m.finished = true
+                                return m, tea.Quit
+                        }</span>
+
+                case "backspace":<span class="cov0" title="0">
+                        if len(m.currentInput) &gt; 0 </span><span class="cov0" title="0">{
+                                m.currentInput = m.currentInput[:len(m.currentInput)-1]
+                        }</span>
+
+                default:<span class="cov0" title="0">
+                        // Add character to input
+                        if len(msg.String()) == 1 </span><span class="cov0" title="0">{
+                                m.currentInput += msg.String()
+                        }</span>
+                }
+        }
+
+        <span class="cov0" title="0">return m, nil</span>
+}
+
+func (m model) View() string <span class="cov0" title="0">{
+        if m.finished </span><span class="cov0" title="0">{
+                if m.err != nil </span><span class="cov0" title="0">{
+                        return ""
+                }</span>
+                <span class="cov0" title="0">return successStyle.Render("✓ All variables collected!\n")</span>
+        }
+
+        <span class="cov0" title="0">var b strings.Builder
+
+        // Title
+        b.WriteString(titleStyle.Render(fmt.Sprintf("Template: %s", m.metadata.TemplateName)))
+        b.WriteString("\n")
+        b.WriteString(descriptionStyle.Render(m.metadata.Description))
+        b.WriteString("\n\n")
+
+        // Progress
+        b.WriteString(descriptionStyle.Render(fmt.Sprintf("Variable %d of %d", m.currentIndex+1, len(m.metadata.Variables))))
+        b.WriteString("\n\n")
+
+        // Current variable
+        if m.currentIndex &lt; len(m.metadata.Variables) </span><span class="cov0" title="0">{
+                currentVar := m.metadata.Variables[m.currentIndex]
+
+                // Variable name
+                required := ""
+                if currentVar.Required </span><span class="cov0" title="0">{
+                        required = lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Render(" *")
+                }</span>
+                <span class="cov0" title="0">b.WriteString(promptStyle.Render(fmt.Sprintf("%s%s", currentVar.Name, required)))
+                b.WriteString("\n")
+
+                // Description
+                b.WriteString(descriptionStyle.Render(currentVar.Description))
+                b.WriteString("\n")
+
+                // Default value hint
+                if currentVar.Default != "" </span><span class="cov0" title="0">{
+                        b.WriteString(descriptionStyle.Render(fmt.Sprintf("[default: %s]", currentVar.Default)))
+                        b.WriteString("\n")
+                }</span>
+
+                // Input field
+                <span class="cov0" title="0">b.WriteString(inputStyle.Render("&gt; " + m.currentInput + "█"))
+                b.WriteString("\n\n")
+
+                // Help text
+                b.WriteString(descriptionStyle.Render("Press Enter to continue, Ctrl+C to cancel"))</span>
+        }
+
+        <span class="cov0" title="0">return b.String()</span>
+}
+
+// CollectVariables shows an interactive prompt to collect variable values
+func CollectVariables(meta *metadata.TemplateMetadata, existingVars map[string]interface{}) (map[string]interface{}, error) <span class="cov0" title="0">{
+        // Create model
+        m := initialModel(meta)
+
+        // Pre-populate with existing variables if provided
+        if existingVars != nil </span><span class="cov0" title="0">{
+                m.values = existingVars
+        }</span>
+
+        // Run the program
+        <span class="cov0" title="0">p := tea.NewProgram(m)
+        finalModel, err := p.Run()
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("error running prompt: %w", err)
+        }</span>
+
+        // Extract final model
+        <span class="cov0" title="0">final := finalModel.(model)
+        if final.err != nil </span><span class="cov0" title="0">{
+                return nil, final.err
+        }</span>
+
+        <span class="cov0" title="0">return final.values, nil</span>
+}
+
+// CollectBundleVariables shows an interactive prompt for bundle variables with template usage info
+// Returns: (variables, template_overrides, error)
+func CollectBundleVariables(bundleMeta *metadata.BundleMetadata, existingVars map[string]interface{}) (map[string]interface{}, map[string]map[string]interface{}, error) <span class="cov0" title="0">{
+        // Build a map of variable -&gt; templates that use it
+        varToTemplates := make(map[string][]string)
+
+        // Check shared variables
+        for _, v := range bundleMeta.SharedVariables </span><span class="cov0" title="0">{
+                varToTemplates[v.Name] = []string{"(shared)"}
+        }</span>
+
+        // Check template-specific variables
+        <span class="cov0" title="0">for templateName, templateVars := range bundleMeta.TemplateVariables </span><span class="cov0" title="0">{
+                for _, v := range templateVars </span><span class="cov0" title="0">{
+                        if templates, exists := varToTemplates[v.Name]; exists </span><span class="cov0" title="0">{
+                                // Variable already seen, add this template
+                                varToTemplates[v.Name] = append(templates, templateName)
+                        }</span> else<span class="cov0" title="0"> {
+                                // New variable, start list with this template
+                                varToTemplates[v.Name] = []string{templateName}
+                        }</span>
+                }
+        }
+
+        // Collect all unique variables with enhanced descriptions
+        <span class="cov0" title="0">allVars := metadata.GetAllVariablesForBundle(bundleMeta)
+        for i := range allVars </span><span class="cov0" title="0">{
+                // Add template usage info to description
+                if templates, exists := varToTemplates[allVars[i].Name]; exists </span><span class="cov0" title="0">{
+                        templateList := strings.Join(templates, ", ")
+                        if allVars[i].Description != "" </span><span class="cov0" title="0">{
+                                allVars[i].Description = fmt.Sprintf("%s\n  Used in: %s", allVars[i].Description, templateList)
+                        }</span> else<span class="cov0" title="0"> {
+                                allVars[i].Description = fmt.Sprintf("Used in: %s", templateList)
+                        }</span>
+                }
+        }
+
+        // Create temporary metadata for the prompt
+        <span class="cov0" title="0">tempMeta := &amp;metadata.TemplateMetadata{
+                TemplateName: bundleMeta.BundleName,
+                Description:  bundleMeta.BundleDescription,
+                Variables:    allVars,
+        }
+
+        // Collect main variables
+        vars, err := CollectVariables(tempMeta, existingVars)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, nil, err
+        }</span>
+
+        // Collect template-specific overrides
+        <span class="cov0" title="0">overrides, err := CollectTemplateOverrides(bundleMeta, vars)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, nil, err
+        }</span>
+
+        <span class="cov0" title="0">return vars, overrides, nil</span>
+}
+
+// CollectTemplateOverrides prompts for template-specific variable overrides
+func CollectTemplateOverrides(bundleMeta *metadata.BundleMetadata, currentVars map[string]interface{}) (map[string]map[string]interface{}, error) <span class="cov0" title="0">{
+        overrides := make(map[string]map[string]interface{})
+
+        // Get list of templates in bundle
+        templateNames := make([]string, 0)
+        for templateName := range bundleMeta.TemplateVariables </span><span class="cov0" title="0">{
+                templateNames = append(templateNames, templateName)
+        }</span>
+
+        // Get list of shared variable names
+        <span class="cov0" title="0">sharedVarNames := make([]string, 0)
+        for _, v := range bundleMeta.SharedVariables </span><span class="cov0" title="0">{
+                sharedVarNames = append(sharedVarNames, v.Name)
+        }</span>
+
+        <span class="cov0" title="0">if len(sharedVarNames) == 0 </span><span class="cov0" title="0">{
+                return overrides, nil // No shared variables to override
+        }</span>
+
+        <span class="cov0" title="0">fmt.Println()
+        fmt.Println(descriptionStyle.Render("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
+        fmt.Println(titleStyle.Render("Template-Specific Overrides"))
+        fmt.Println(descriptionStyle.Render("Override shared variables for specific templates"))
+        fmt.Println()
+
+        for </span><span class="cov0" title="0">{
+                // Ask if user wants to add an override
+                fmt.Print(promptStyle.Render("Add a template-specific override? (y/n): "))
+                var response string
+                fmt.Scanln(&amp;response)
+                response = strings.TrimSpace(strings.ToLower(response))
+
+                if response != "y" &amp;&amp; response != "yes" </span><span class="cov0" title="0">{
+                        break</span>
+                }
+
+                // Select template
+                <span class="cov0" title="0">fmt.Println()
+                fmt.Println(descriptionStyle.Render("Available templates:"))
+                for i, tmpl := range templateNames </span><span class="cov0" title="0">{
+                        fmt.Printf("  %d. %s\n", i+1, tmpl)
+                }</span>
+                <span class="cov0" title="0">fmt.Print(promptStyle.Render("Select template (number): "))
+                var templateIdx int
+                fmt.Scanln(&amp;templateIdx)
+                if templateIdx &lt; 1 || templateIdx &gt; len(templateNames) </span><span class="cov0" title="0">{
+                        fmt.Println(descriptionStyle.Render("Invalid selection, skipping..."))
+                        continue</span>
+                }
+                <span class="cov0" title="0">selectedTemplate := templateNames[templateIdx-1]
+
+                // Select variable to override
+                fmt.Println()
+                fmt.Println(descriptionStyle.Render("Shared variables:"))
+                for i, varName := range sharedVarNames </span><span class="cov0" title="0">{
+                        currentVal := currentVars[varName]
+                        fmt.Printf("  %d. %s (current: %v)\n", i+1, varName, currentVal)
+                }</span>
+                <span class="cov0" title="0">fmt.Print(promptStyle.Render("Select variable to override (number): "))
+                var varIdx int
+                fmt.Scanln(&amp;varIdx)
+                if varIdx &lt; 1 || varIdx &gt; len(sharedVarNames) </span><span class="cov0" title="0">{
+                        fmt.Println(descriptionStyle.Render("Invalid selection, skipping..."))
+                        continue</span>
+                }
+                <span class="cov0" title="0">selectedVar := sharedVarNames[varIdx-1]
+
+                // Get new value
+                fmt.Print(promptStyle.Render(fmt.Sprintf("New value for %s in %s: ", selectedVar, selectedTemplate)))
+                var newValue string
+                fmt.Scanln(&amp;newValue)
+                newValue = strings.TrimSpace(newValue)
+
+                if newValue == "" </span><span class="cov0" title="0">{
+                        fmt.Println(descriptionStyle.Render("Empty value, skipping..."))
+                        continue</span>
+                }
+
+                // Store the override
+                <span class="cov0" title="0">if overrides[selectedTemplate] == nil </span><span class="cov0" title="0">{
+                        overrides[selectedTemplate] = make(map[string]interface{})
+                }</span>
+                <span class="cov0" title="0">overrides[selectedTemplate][selectedVar] = newValue
+
+                fmt.Println(successStyle.Render(fmt.Sprintf("✓ Override added: %s.%s = %s", selectedTemplate, selectedVar, newValue)))
+                fmt.Println()</span>
+        }
+
+        <span class="cov0" title="0">if len(overrides) &gt; 0 </span><span class="cov0" title="0">{
+                fmt.Println()
+                fmt.Println(successStyle.Render(fmt.Sprintf("✓ %d template override(s) configured", len(overrides))))
+        }</span>
+
+        <span class="cov0" title="0">return overrides, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">/*
+Copyright © 2025 NAME HERE &lt;EMAIL ADDRESS&gt;
+
+*/
+package main
+
+import "github.com/thesudoYT/conjure/cmd"
+
+func main() <span class="cov0" title="0">{
+        cmd.Execute()
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

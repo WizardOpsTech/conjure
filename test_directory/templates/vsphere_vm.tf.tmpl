@@ -1,0 +1,42 @@
+provider "vsphere" {
+  user                 = var.vsphere_user
+  password             = var.vsphere_password
+  vsphere_server       = var.vsphere_server
+  allow_unverified_ssl = true
+  api_timeout          = 10
+}
+
+data "vsphere_datacenter" "datacenter" {
+  name = "{{ .datacenter_name }}"
+}
+
+data "vsphere_datastore" "datastore" {
+  name          = "{{ .datastore_name }}"
+  datacenter_id = data.vsphere_datacenter.datacenter.id
+}
+
+data "vsphere_compute_cluster" "cluster" {
+  name          = "{{ .cluster_name }}"
+  datacenter_id = data.vsphere_datacenter.datacenter.id
+}
+
+data "vsphere_network" "network" {
+  name          = "{{ .network_name }}"
+  datacenter_id = data.vsphere_datacenter.datacenter.id
+}
+
+resource "vsphere_virtual_machine" "vm" {
+  name             = "{{ .vm_name }}"
+  resource_pool_id = data.vsphere_compute_cluster.cluster.resource_pool_id
+  datastore_id     = data.vsphere_datastore.datastore.id
+  num_cpus         = {{ .num_cpus }}
+  memory           = {{ .memory }}
+  guest_id         = "otherLinux64Guest"
+  network_interface {
+    network_id = data.vsphere_network.network.id
+  }
+  disk {
+    label = "disk0"
+    size  = {{ .disk_size }}
+  }
+}

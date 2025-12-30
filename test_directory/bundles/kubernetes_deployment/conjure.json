@@ -1,0 +1,63 @@
+{
+  "bundle_type": "kubernetes",
+  "bundle_name": "kubernetes-deployment",
+  "bundle_description": "Basic kubernetes deployment template bundle used by team A.",
+  "shared_variables": [
+    {
+      "name": "app_name",
+      "description": "Application name used across all resources",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "namespace",
+      "description": "Kubernetes namespace",
+      "type": "string",
+      "default": "default"
+    },
+    {
+      "name": "container_port",
+      "description": "Container port exposed by the application",
+      "type": "integer",
+      "default": "80"
+    }
+  ],
+  "template_variables": {
+    "deployment.yaml.tmpl": [
+      {
+        "name": "replicas",
+        "description": "Number of pod replicas",
+        "type": "integer",
+        "default": "3"
+      },
+      {
+        "name": "container_image",
+        "description": "Container image to deploy",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "service.yaml.tmpl": [
+      {
+        "name": "service_port",
+        "description": "Service port",
+        "type": "integer",
+        "default": "80"
+      },
+      {
+        "name": "service_type",
+        "description": "Service type (ClusterIP, NodePort, LoadBalancer)",
+        "type": "string",
+        "default": "ClusterIP"
+      }
+    ],
+    "ingress.yaml.tmpl": [
+      {
+        "name": "ingress_host",
+        "description": "Ingress hostname",
+        "type": "string",
+        "required": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "template_name": "deployment.yaml",
+  "description": "Kubernetes deployment with configurable replicas, resources, and environment",
+  "variables": [
+    {
+      "name": "app_name",
+      "description": "Application name (used for deployment, labels, and container name)",
+      "type": "string",
+      "required": true,
+      "default": ""
+    },
+    {
+      "name": "namespace",
+      "description": "Kubernetes namespace to deploy to",
+      "type": "string",
+      "required": false,
+      "default": "default"
+    },
+    {
+      "name": "environment",
+      "description": "Environment label (dev, staging, production)",
+      "type": "string",
+      "required": false,
+      "default": "dev"
+    },
+    {
+      "name": "replicas",
+      "description": "Number of pod replicas",
+      "type": "int",
+      "required": false,
+      "default": "3"
+    },
+    {
+      "name": "image",
+      "description": "Container image (e.g., nginx:latest, myapp:v1.2.3)",
+      "type": "string",
+      "required": true,
+      "default": ""
+    },
+    {
+      "name": "container_port",
+      "description": "Container port to expose",
+      "type": "int",
+      "required": false,
+      "default": "8080"
+    },
+    {
+      "name": "memory_request",
+      "description": "Memory request (e.g., 256Mi, 1Gi)",
+      "type": "string",
+      "required": false,
+      "default": "256Mi"
+    },
+    {
+      "name": "cpu_request",
+      "description": "CPU request (e.g., 100m, 500m)",
+      "type": "string",
+      "required": false,
+      "default": "100m"
+    },
+    {
+      "name": "memory_limit",
+      "description": "Memory limit (e.g., 512Mi, 2Gi)",
+      "type": "string",
+      "required": false,
+      "default": "512Mi"
+    },
+    {
+      "name": "cpu_limit",
+      "description": "CPU limit (e.g., 500m, 1000m)",
+      "type": "string",
+      "required": false,
+      "default": "500m"
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "template_name": "vsphere_vm",
+  "description": "vSphere virtual machine Terraform configuration",
+  "variables": [
+    {
+      "name": "datacenter_name",
+      "description": "Name of the vSphere datacenter",
+      "type": "string",
+      "required": true,
+      "default": ""
+    },
+    {
+      "name": "datastore_name",
+      "description": "Name of the vSphere datastore",
+      "type": "string",
+      "required": true,
+      "default": ""
+    },
+    {
+      "name": "cluster_name",
+      "description": "Name of the vSphere compute cluster",
+      "type": "string",
+      "required": true,
+      "default": ""
+    },
+    {
+      "name": "network_name",
+      "description": "Name of the vSphere network",
+      "type": "string",
+      "required": false,
+      "default": "VM Network"
+    },
+    {
+      "name": "vm_name",
+      "description": "Name of the virtual machine",
+      "type": "string",
+      "required": true,
+      "default": ""
+    },
+    {
+      "name": "num_cpus",
+      "description": "Number of virtual CPUs",
+      "type": "int",
+      "required": false,
+      "default": "2"
+    },
+    {
+      "name": "memory",
+      "description": "Memory in MB",
+      "type": "int",
+      "required": false,
+      "default": "2048"
+    },
+    {
+      "name": "disk_size",
+      "description": "Disk size in GB",
+      "type": "int",
+      "required": false,
+      "default": "40"
+    }
+  ]
+}

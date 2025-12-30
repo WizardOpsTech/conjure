@@ -1,0 +1,17 @@
+# Values file for deployment.yaml.tmpl template
+# For use when testing conjure template deployment.yaml -o test_deployment.yaml -f deployment_values.yaml
+# This file provides default values that can be overridden with --var flags
+
+# Kubernetes Deployment Configuration
+app_name: "my-app"
+namespace: "default"
+environment: "production"
+replicas: 3
+image: "nginx:latest"
+container_port: 80
+
+# Resource Configuration
+memory_request: "256Mi"
+cpu_request: "250m"
+memory_limit: "512Mi"
+cpu_limit: "500m"

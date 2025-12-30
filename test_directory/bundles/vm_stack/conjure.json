@@ -1,0 +1,5 @@
+{
+  "bundle_type": "terraform",
+  "bundle_name": "vm stack",
+  "bundle_description": "Terraform bundle for creating a VM stack."
+}

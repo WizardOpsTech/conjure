@@ -1,0 +1,14 @@
+# Values file for vsphere_vm.tf.tmpl template
+# This file provides default values that can be overridden with --var flags
+
+# vSphere Infrastructure
+datacenter_name: "DC1"
+datastore_name: "datastore1"
+cluster_name: "Cluster1"
+network_name: "VM Network"
+
+# Virtual Machine Configuration
+vm_name: "test-vm-01"
+num_cpus: 2
+memory: 4096
+disk_size: 40
