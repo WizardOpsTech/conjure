@@ -2,10 +2,8 @@ package list
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/thesudoYT/conjure/internal/config"
 )
 
 // listCmd represents the list command
@@ -19,15 +17,12 @@ Example: conjure list templates,
          conjure list templates -t yaml,
          conjure list bundles -t kubernetes`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Create AppConfig from the LoadConfig unmarshal function. Refer to AppConfig anywhere in the code.
-		cfg, err := config.LoadConfig()
-		if err != nil {
-			fmt.Printf("Error loading config: %v\n", err)
-			os.Exit(1)
-		}
-		fmt.Println("list called")
-		fmt.Println(cfg.TemplatesDir)
-		fmt.Println(cfg.BundlesDir)
+		// When no subcommand is specified, list both templates and bundles
+		fmt.Println("=== Templates ===")
+		listTemplates("")
+		fmt.Println()
+		fmt.Println("=== Bundles ===")
+		listBundles("")
 	},
 }
 
