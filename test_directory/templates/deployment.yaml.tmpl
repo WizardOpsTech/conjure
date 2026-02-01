@@ -1,7 +1,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{.app_name}}-deployment
+  {{if eq .environment "production"}}
+  name: {{.app_name}}-deployment-prod
+  {{else}}
+  name: {{.app_name}}-deployment-dev
+  {{end}}
   namespace: {{.namespace}}
   labels:
     app: {{.app_name}}

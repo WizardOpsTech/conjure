@@ -3,6 +3,8 @@ package bundle
 import (
 	"os"
 	"testing"
+
+	"github.com/wizardopstech/conjure/internal/render"
 )
 
 func TestParseVariables_Simple(t *testing.T) {
@@ -11,7 +13,7 @@ func TestParseVariables_Simple(t *testing.T) {
 		"namespace=production",
 	}
 
-	result, err := parseVariables(varsList)
+	result, err := render.ParseVariables(varsList)
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
@@ -31,7 +33,7 @@ func TestParseVariables_WithSpaces(t *testing.T) {
 		"namespace=production",
 	}
 
-	result, err := parseVariables(varsList)
+	result, err := render.ParseVariables(varsList)
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
@@ -46,7 +48,7 @@ func TestParseVariables_InvalidFormat(t *testing.T) {
 		"invalid_no_equals",
 	}
 
-	_, err := parseVariables(varsList)
+	_, err := render.ParseVariables(varsList)
 	if err == nil {
 		t.Error("Expected error for invalid format, got nil")
 	}
@@ -57,7 +59,7 @@ func TestParseVariables_EmptyKey(t *testing.T) {
 		"=value",
 	}
 
-	_, err := parseVariables(varsList)
+	_, err := render.ParseVariables(varsList)
 	if err == nil {
 		t.Error("Expected error for empty key, got nil")
 	}
@@ -137,7 +139,6 @@ func TestParseVariablesWithTemplateOverrides_MultipleTemplates(t *testing.T) {
 		t.Fatalf("Expected 2 template overrides, got: %d", len(overrides))
 	}
 
-	// Check ingress overrides (should have 2 variables)
 	ingressOverrides, exists := overrides["ingress.yaml.tmpl"]
 	if !exists {
 		t.Fatal("Expected override for 'ingress.yaml.tmpl', not found")
@@ -146,7 +147,6 @@ func TestParseVariablesWithTemplateOverrides_MultipleTemplates(t *testing.T) {
 		t.Errorf("Expected 2 ingress overrides, got: %d", len(ingressOverrides))
 	}
 
-	// Check service overrides
 	serviceOverrides, exists := overrides["service.yaml.tmpl"]
 	if !exists {
 		t.Fatal("Expected override for 'service.yaml.tmpl', not found")
@@ -190,7 +190,6 @@ func TestParseVariablesWithTemplateOverrides_EmptyVarName(t *testing.T) {
 }
 
 func TestParseValuesWithOverrides_Simple(t *testing.T) {
-	// Create a temporary values file
 	content := `
 app_name: myapp
 namespace: production
@@ -239,7 +238,6 @@ template_overrides:
 		t.Fatalf("Expected no error, got: %v", err)
 	}
 
-	// Check shared vars
 	if shared["app_name"] != "myapp" {
 		t.Errorf("Expected app_name='myapp', got: %v", shared["app_name"])
 	}
@@ -248,12 +246,10 @@ template_overrides:
 		t.Errorf("Expected shared namespace='production', got: %v", shared["namespace"])
 	}
 
-	// template_overrides should not be in shared vars
 	if _, exists := shared["template_overrides"]; exists {
 		t.Error("template_overrides should not be in shared variables")
 	}
 
-	// Check template overrides
 	if len(overrides) != 2 {
 		t.Fatalf("Expected 2 template overrides, got: %d", len(overrides))
 	}
@@ -272,7 +268,6 @@ template_overrides:
 	}
 }
 
-// Helper functions for testing
 func createTempFile(pattern, content string) (string, error) {
 	tmpFile, err := os.CreateTemp("", pattern)
 	if err != nil {

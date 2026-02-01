@@ -4,6 +4,8 @@ import (
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/wizardopstech/conjure/internal/render"
 )
 
 func TestParseVariables_Simple(t *testing.T) {
@@ -13,7 +15,7 @@ func TestParseVariables_Simple(t *testing.T) {
 		"memory=8192",
 	}
 
-	result, err := parseVariables(varsList)
+	result, err := render.ParseVariables(varsList)
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
@@ -37,7 +39,7 @@ func TestParseVariables_WithSpaces(t *testing.T) {
 		"cpu=4",
 	}
 
-	result, err := parseVariables(varsList)
+	result, err := render.ParseVariables(varsList)
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
@@ -52,7 +54,7 @@ func TestParseVariables_InvalidFormat(t *testing.T) {
 		"invalid_no_equals",
 	}
 
-	_, err := parseVariables(varsList)
+	_, err := render.ParseVariables(varsList)
 	if err == nil {
 		t.Error("Expected error for invalid format, got nil")
 	}
@@ -63,7 +65,7 @@ func TestParseVariables_EmptyKey(t *testing.T) {
 		"=value",
 	}
 
-	_, err := parseVariables(varsList)
+	_, err := render.ParseVariables(varsList)
 	if err == nil {
 		t.Error("Expected error for empty key, got nil")
 	}
@@ -75,7 +77,7 @@ func TestRenderTemplate_Simple(t *testing.T) {
 		"name": "World",
 	}
 
-	result, err := renderTemplate(templateContent, variables)
+	result, err := render.RenderTemplate(templateContent, variables)
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
@@ -93,7 +95,7 @@ func TestRenderTemplate_MultipleVariables(t *testing.T) {
 		"memory":  "8192",
 	}
 
-	result, err := renderTemplate(templateContent, variables)
+	result, err := render.RenderTemplate(templateContent, variables)
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
@@ -108,7 +110,7 @@ func TestRenderTemplate_MissingVariable(t *testing.T) {
 	templateContent := "Hello {{ .missing }}!"
 	variables := map[string]interface{}{}
 
-	_, err := renderTemplate(templateContent, variables)
+	_, err := render.RenderTemplate(templateContent, variables)
 	if err == nil {
 		t.Error("Expected error for missing variable, got nil")
 	}
@@ -120,7 +122,7 @@ func TestRenderTemplate_InvalidSyntax(t *testing.T) {
 		"name": "World",
 	}
 
-	_, err := renderTemplate(templateContent, variables)
+	_, err := render.RenderTemplate(templateContent, variables)
 	if err == nil {
 		t.Error("Expected error for invalid template syntax, got nil")
 	}
@@ -133,7 +135,7 @@ func TestRenderTemplate_ConditionalLogic(t *testing.T) {
 		"enabled": true,
 	}
 
-	result, err := renderTemplate(templateContent, variables)
+	result, err := render.RenderTemplate(templateContent, variables)
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
@@ -144,7 +146,7 @@ func TestRenderTemplate_ConditionalLogic(t *testing.T) {
 
 	// Test with false
 	variables["enabled"] = false
-	result, err = renderTemplate(templateContent, variables)
+	result, err = render.RenderTemplate(templateContent, variables)
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
@@ -162,7 +164,7 @@ func TestRenderTemplate_Loops(t *testing.T) {
 		"items": []string{"one", "two", "three"},
 	}
 
-	result, err := renderTemplate(templateContent, variables)
+	result, err := render.RenderTemplate(templateContent, variables)
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
@@ -228,7 +230,6 @@ func TestParseValues_NonexistentFile(t *testing.T) {
 	}
 }
 
-// Helper functions for testing
 func createTempFile(pattern, content string) (string, error) {
 	tmpFile, err := os.CreateTemp("", pattern)
 	if err != nil {

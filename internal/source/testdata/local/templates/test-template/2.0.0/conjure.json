@@ -1,0 +1,21 @@
+{
+  "schema_version": "v1",
+  "template_name": "test-template",
+  "template_description": "A test template v2",
+  "version": "2.0.0",
+  "template_type": "yaml",
+  "variables": [
+    {
+      "name": "app_name",
+      "description": "Application name",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "replicas",
+      "description": "Number of replicas",
+      "type": "int",
+      "default": "1"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+# Test configuration for remote source testing against local nginx server
+templates_source: remote
+bundles_source: remote
+templates_remote_url: http://localhost:8080
+bundles_remote_url: http://localhost:8080
+cache_dir: ~/.conjure-test-cache
+templates_priority: remote-first
+bundles_priority: remote-first

@@ -1,0 +1,21 @@
+{
+  "schema_version": "v1",
+  "version": "1.1.0",
+  "template_name": "greeting",
+  "template_type": "txt",
+  "template_description": "A simple greeting template",
+  "variables": [
+    {
+      "name": "name",
+      "description": "Your name",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "team",
+      "description": "Your team name",
+      "type": "string",
+      "default": "Platform Engineering"
+    }
+  ]
+}

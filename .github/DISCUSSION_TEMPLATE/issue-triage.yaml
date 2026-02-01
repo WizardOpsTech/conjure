@@ -1,0 +1,115 @@
+labels: ["needs-confirmation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!IMPORTANT]
+        > Please read through [the Discussion rules](https://github.com/WizardOpsTech/conjure/discussions/2), review [the docs](https://conjure.wizardops.dev/docs), and check for both existing [Discussions](https://github.com/wizardopstech/conjure/discussions?discussions_q=) and [Issues](https://github.com/wizardopstech/conjure/issues?q=sort%3Areactions-desc) prior to opening a new Discussion.
+  - type: markdown
+    attributes:
+      value: "# Issue Details"
+  - type: textarea
+    attributes:
+      label: Issue Description
+      description: |
+        Provide a detailed description of the issue.  Include relevant information, such as:
+        - The feature or configuration option you encounter the issue with.
+        - Screenshots, screen recordings, or other supporting media (as needed).
+        - If this is a regression of an existing issue that was closed or resolved, please include the previous item reference (Discussion, Issue, PR, commit) in your description.
+
+        > [!TIP]
+        > **Not sure what information to include?**
+        > Here are some recommendations:
+        > - **Repository Issues:  Provide a copy of the command run, the conjure.yaml config file, and the template with its metadata being used. If possible, share the directory structure, index.json file, and any other helpful information.
+        > - **Interactive Mode Issues: Provide a copy of the command run, the conjure.yaml config file, and the template with its metadata being used.
+        > - **Crashes:** Try to reproduce using a debug build and provide the stack trace.
+      placeholder: |
+        When running conjure with the command `conjure template minecraft-kubernetes -o ./output` after being put into interactive mode the text color is black against my black terminal screen.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected Behavior
+      description: |
+        Describe how you expect Conjure to behave in this situation.  Include any relevant documentation links.
+      placeholder: |
+        The text color should be purple.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Actual Behavior
+      description: |
+        Describe how Conjure actually behaves in this situation.  If it is not immediately obvious how the actual behavior differs from the expected behavior described above, please be sure to mention the deviation specifically.
+      placeholder: |
+        The text is black against my black terminal. Screen shot attached.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Reproduction Steps
+      description: |
+        Provide a detailed set of step-by-step instructions for reproducing this issue.
+      placeholder: |
+        1. Run any `conjure template` or `conjure bundle` command that puts the user into interactive mode.
+        2. Observe the text color.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Conjure Logs
+      description: |
+        Provide any captured Conjure logs or stacktraces during your issue reproduction in this field.
+      render: text
+  - type: textarea
+    attributes:
+      label: Conjure Version
+      description: Paste the output of `conjure --version` here.
+      placeholder: |
+        conjure version 1.0.0
+        commit: 52f40c9d153bd39982bb3b718597222277d11f06
+        built: 02012026
+      render: text
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: OS Version Information
+      description: |
+        Please tell us what operating system (name and version) you are using.
+      placeholder: Ubuntu 22.04.5 LTS (Jammy Jellyfish)
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Conjure Configuration
+      description: |
+        Please provide the **minimum** configuration needed to reproduce this issue.  If you can still reproduce the issue with one of the lines removed, do not include that line.
+      placeholder: |
+        templates_source: both
+        bundles_source: both
+        templates_local_dir: /home/wizard/conjure-workspaced
+        bundles_local_dir: /home/wizard/conjure-workspaced
+        templates_remote_url: https://raw.githubusercontent.com/WizardOpsTech/conjure-get-started/master
+        bundles_remote_url: https://raw.githubusercontent.com/WizardOpsTech/conjure-get-started/master
+        templates_priority: local-first
+        bundles_priority: local-first
+      render: yaml
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        # User Acknowledgements
+        > [!TIP]
+        > Use these links to review the existing Conjure [Discussions](https://github.com/wizardopstech/conjure/discussions?discussions_q=) and [Issues](https://github.com/wizardopstech/conjure/issues?q=sort%3Areactions-desc).
+  - type: checkboxes
+    attributes:
+      label: "I acknowledge that:"
+      options:
+        - label: I have reviewed the docs and confirm that my issue is not related to not following the docs.
+          required: true
+        - label: I have searched the Conjure repository (both open and closed Discussions and Issues) and confirm this is not a duplicate of an existing issue or discussion.
+          required: true
+        - label: I have completed this template with the most accurate and complete information that I can.
+          required: true

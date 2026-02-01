@@ -1,4 +1,5 @@
 {
+  "schema_version": "v1",
   "bundle_type": "kubernetes",
   "bundle_name": "kubernetes-deployment",
   "bundle_description": "Basic kubernetes deployment template bundle used by team A.",
@@ -7,7 +8,7 @@
       "name": "app_name",
       "description": "Application name used across all resources",
       "type": "string",
-      "required": true
+      "default": ""
     },
     {
       "name": "namespace",
@@ -18,7 +19,7 @@
     {
       "name": "container_port",
       "description": "Container port exposed by the application",
-      "type": "integer",
+      "type": "int",
       "default": "80"
     }
   ],
@@ -27,21 +28,21 @@
       {
         "name": "replicas",
         "description": "Number of pod replicas",
-        "type": "integer",
+        "type": "int",
         "default": "3"
       },
       {
         "name": "container_image",
         "description": "Container image to deploy",
         "type": "string",
-        "required": true
+        "default": ""
       }
     ],
     "service.yaml.tmpl": [
       {
         "name": "service_port",
         "description": "Service port",
-        "type": "integer",
+        "type": "int",
         "default": "80"
       },
       {
@@ -56,7 +57,7 @@
         "name": "ingress_host",
         "description": "Ingress hostname",
         "type": "string",
-        "required": true
+        "default": ""
       }
     ]
   }

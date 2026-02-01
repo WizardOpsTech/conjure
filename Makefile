@@ -1,12 +1,35 @@
-.PHONY: test test-unit test-integration test-verbose coverage coverage-html clean help
+.PHONY: test test-unit test-integration test-verbose coverage coverage-html clean help build build-dev
 
 GO := $(shell command -v go)
 ifeq ($(GO),)
 $(error go not found in PATH)
 endif
 
+# Version information
+VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "none")
+DATE ?= $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+# Build flags
+LDFLAGS := -ldflags "-s -w -X main.version=$(VERSION) -X main.commit=$(COMMIT) -X main.date=$(DATE)"
+
 # Default target
 all: test
+
+# Build the binary with version information
+build:
+	@echo "Building conjure..."
+	@$(GO) build $(LDFLAGS) -o bin/conjure main.go
+	@echo "Binary built at bin/conjure"
+	@echo "Version: $(VERSION)"
+	@echo "Commit: $(COMMIT)"
+	@echo "Date: $(DATE)"
+
+# Build for development (no version injection)
+build-dev:
+	@echo "Building conjure (dev)..."
+	@$(GO) build -o bin/conjure main.go
+	@echo "Binary built at bin/conjure"
 
 # Run all tests
 test:
@@ -59,11 +82,13 @@ clean:
 
 # Show help
 help:
-	@echo "Conjure Test Makefile"
+	@echo "Conjure Makefile"
 	@echo ""
 	@echo "Usage: make [target]"
 	@echo ""
 	@echo "Targets:"
+	@echo "  build            Build binary with version info"
+	@echo "  build-dev        Build binary without version info"
 	@echo "  test             Run all tests (default)"
 	@echo "  test-unit        Run unit tests only"
 	@echo "  test-integration Run integration tests only"
@@ -74,6 +99,8 @@ help:
 	@echo "  help             Show this help message"
 	@echo ""
 	@echo "Examples:"
+	@echo "  make build              # Build with version info"
+	@echo "  make build-dev          # Build for development"
 	@echo "  make                    # Run all tests"
 	@echo "  make coverage           # Generate coverage report"
 	@echo "  make coverage-html      # Generate HTML coverage report"

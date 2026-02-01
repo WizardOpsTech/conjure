@@ -1,0 +1,14 @@
+{
+  "schema_version": "v1",
+  "template_name": "test.json",
+  "template_description": "Test template",
+  "template_type": "text",
+  "variables": [
+    {
+      "name": "name",
+      "description": "Name",
+      "type": "string",
+      "default": ""
+    }
+  ]
+}

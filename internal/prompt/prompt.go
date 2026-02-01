@@ -6,7 +6,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/thesudoYT/conjure/internal/metadata"
+	"github.com/wizardopstech/conjure/internal/metadata"
 )
 
 var (
@@ -28,12 +28,12 @@ var (
 )
 
 type model struct {
-	metadata      *metadata.TemplateMetadata
-	currentIndex  int
-	values        map[string]interface{}
-	currentInput  string
-	finished      bool
-	err           error
+	metadata     *metadata.TemplateMetadata
+	currentIndex int
+	values       map[string]interface{}
+	currentInput string
+	finished     bool
+	err          error
 }
 
 func initialModel(meta *metadata.TemplateMetadata) model {
@@ -60,28 +60,23 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 
 		case "enter":
-			// Get current variable
 			if m.currentIndex >= len(m.metadata.Variables) {
 				return m, nil
 			}
 
 			currentVar := m.metadata.Variables[m.currentIndex]
 
-			// Store the value or use default
 			if m.currentInput == "" && currentVar.Default != "" {
 				m.values[currentVar.Name] = currentVar.Default
-			} else if m.currentInput == "" && currentVar.Required {
-				// Required but empty - don't advance
+			} else if m.currentInput == "" && currentVar.Default == "" {
 				return m, nil
 			} else if m.currentInput != "" {
 				m.values[currentVar.Name] = m.currentInput
 			}
 
-			// Move to next variable
 			m.currentIndex++
 			m.currentInput = ""
 
-			// Check if we're done
 			if m.currentIndex >= len(m.metadata.Variables) {
 				m.finished = true
 				return m, tea.Quit
@@ -93,7 +88,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		default:
-			// Add character to input
 			if len(msg.String()) == 1 {
 				m.currentInput += msg.String()
 			}
@@ -116,7 +110,7 @@ func (m model) View() string {
 	// Title
 	_, _ = b.WriteString(titleStyle.Render(fmt.Sprintf("Template: %s", m.metadata.TemplateName)))
 	_, _ = b.WriteString("\n")
-	_, _ = b.WriteString(descriptionStyle.Render(m.metadata.Description))
+	_, _ = b.WriteString(descriptionStyle.Render(m.metadata.TemplateDescription))
 	_, _ = b.WriteString("\n\n")
 
 	// Progress
@@ -129,7 +123,7 @@ func (m model) View() string {
 
 		// Variable name
 		required := ""
-		if currentVar.Required {
+		if currentVar.Default == "" {
 			required = lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Render(" *")
 		}
 		_, _ = b.WriteString(promptStyle.Render(fmt.Sprintf("%s%s", currentVar.Name, required)))
@@ -156,24 +150,19 @@ func (m model) View() string {
 	return b.String()
 }
 
-// CollectVariables shows an interactive prompt to collect variable values
 func CollectVariables(meta *metadata.TemplateMetadata, existingVars map[string]interface{}) (map[string]interface{}, error) {
-	// Create model
 	m := initialModel(meta)
 
-	// Pre-populate with existing variables if provided
 	if existingVars != nil {
 		m.values = existingVars
 	}
 
-	// Run the program
 	p := tea.NewProgram(m)
 	finalModel, err := p.Run()
 	if err != nil {
 		return nil, fmt.Errorf("error running prompt: %w", err)
 	}
 
-	// Extract final model
 	final := finalModel.(model)
 	if final.err != nil {
 		return nil, final.err
@@ -182,34 +171,25 @@ func CollectVariables(meta *metadata.TemplateMetadata, existingVars map[string]i
 	return final.values, nil
 }
 
-// CollectBundleVariables shows an interactive prompt for bundle variables with template usage info
-// Returns: (variables, template_overrides, error)
 func CollectBundleVariables(bundleMeta *metadata.BundleMetadata, existingVars map[string]interface{}) (map[string]interface{}, map[string]map[string]interface{}, error) {
-	// Build a map of variable -> templates that use it
 	varToTemplates := make(map[string][]string)
 
-	// Check shared variables
 	for _, v := range bundleMeta.SharedVariables {
 		varToTemplates[v.Name] = []string{"(shared)"}
 	}
 
-	// Check template-specific variables
 	for templateName, templateVars := range bundleMeta.TemplateVariables {
 		for _, v := range templateVars {
 			if templates, exists := varToTemplates[v.Name]; exists {
-				// Variable already seen, add this template
 				varToTemplates[v.Name] = append(templates, templateName)
 			} else {
-				// New variable, start list with this template
 				varToTemplates[v.Name] = []string{templateName}
 			}
 		}
 	}
 
-	// Collect all unique variables with enhanced descriptions
 	allVars := metadata.GetAllVariablesForBundle(bundleMeta)
 	for i := range allVars {
-		// Add template usage info to description
 		if templates, exists := varToTemplates[allVars[i].Name]; exists {
 			templateList := strings.Join(templates, ", ")
 			if allVars[i].Description != "" {
@@ -220,20 +200,18 @@ func CollectBundleVariables(bundleMeta *metadata.BundleMetadata, existingVars ma
 		}
 	}
 
-	// Create temporary metadata for the prompt
 	tempMeta := &metadata.TemplateMetadata{
-		TemplateName: bundleMeta.BundleName,
-		Description:  bundleMeta.BundleDescription,
-		Variables:    allVars,
+		TemplateName:        bundleMeta.BundleName,
+		TemplateDescription: bundleMeta.BundleDescription,
+		TemplateType:        bundleMeta.BundleType,
+		Variables:           allVars,
 	}
 
-	// Collect main variables
 	vars, err := CollectVariables(tempMeta, existingVars)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// Collect template-specific overrides
 	overrides, err := CollectTemplateOverrides(bundleMeta, vars)
 	if err != nil {
 		return nil, nil, err
@@ -242,24 +220,21 @@ func CollectBundleVariables(bundleMeta *metadata.BundleMetadata, existingVars ma
 	return vars, overrides, nil
 }
 
-// CollectTemplateOverrides prompts for template-specific variable overrides
 func CollectTemplateOverrides(bundleMeta *metadata.BundleMetadata, currentVars map[string]interface{}) (map[string]map[string]interface{}, error) {
 	overrides := make(map[string]map[string]interface{})
 
-	// Get list of templates in bundle
 	templateNames := make([]string, 0)
 	for templateName := range bundleMeta.TemplateVariables {
 		templateNames = append(templateNames, templateName)
 	}
 
-	// Get list of shared variable names
 	sharedVarNames := make([]string, 0)
 	for _, v := range bundleMeta.SharedVariables {
 		sharedVarNames = append(sharedVarNames, v.Name)
 	}
 
 	if len(sharedVarNames) == 0 {
-		return overrides, nil // No shared variables to override
+		return overrides, nil
 	}
 
 	fmt.Println()
@@ -269,7 +244,6 @@ func CollectTemplateOverrides(bundleMeta *metadata.BundleMetadata, currentVars m
 	fmt.Println()
 
 	for {
-		// Ask if user wants to add an override
 		fmt.Print(promptStyle.Render("Add a template-specific override? (y/n): "))
 		var response string
 		if _, err := fmt.Scanln(&response); err != nil {
@@ -281,7 +255,6 @@ func CollectTemplateOverrides(bundleMeta *metadata.BundleMetadata, currentVars m
 			break
 		}
 
-		// Select template
 		fmt.Println()
 		fmt.Println(descriptionStyle.Render("Available templates:"))
 		for i, tmpl := range templateNames {
@@ -299,7 +272,6 @@ func CollectTemplateOverrides(bundleMeta *metadata.BundleMetadata, currentVars m
 		}
 		selectedTemplate := templateNames[templateIdx-1]
 
-		// Select variable to override
 		fmt.Println()
 		fmt.Println(descriptionStyle.Render("Shared variables:"))
 		for i, varName := range sharedVarNames {
@@ -318,7 +290,6 @@ func CollectTemplateOverrides(bundleMeta *metadata.BundleMetadata, currentVars m
 		}
 		selectedVar := sharedVarNames[varIdx-1]
 
-		// Get new value
 		fmt.Print(promptStyle.Render(fmt.Sprintf("New value for %s in %s: ", selectedVar, selectedTemplate)))
 		var newValue string
 		if _, err := fmt.Scanln(&newValue); err != nil {
@@ -332,7 +303,6 @@ func CollectTemplateOverrides(bundleMeta *metadata.BundleMetadata, currentVars m
 			continue
 		}
 
-		// Store the override
 		if overrides[selectedTemplate] == nil {
 			overrides[selectedTemplate] = make(map[string]interface{})
 		}

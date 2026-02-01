@@ -1,0 +1,9 @@
+# Test artifacts
+test-output/
+*.generated.*
+
+# Docker
+.env
+
+# Logs
+*.log

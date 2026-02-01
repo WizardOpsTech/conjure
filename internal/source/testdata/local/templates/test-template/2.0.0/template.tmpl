@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: {{ .app_name }}
+spec:
+  replicas: {{ .replicas }}
+  template:
+    spec:
+      containers:
+      - name: {{ .app_name }}
+        image: nginx:latest

@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  conjure-repo-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        REPO_URL: https://github.com/WizardOpsTech/conjure-get-started.git
+        REPO_BRANCH: master
+    image: conjure-test-server:latest
+    container_name: conjure-test-server
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
