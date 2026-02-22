@@ -26,6 +26,7 @@ Examples:
   conjure list bundles
   conjure list bundles --versions
   conjure list bundles --type kubernetes`,
+		Args: cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			bundleType, _ := cmd.Flags().GetString("type")
 			showAllVersions, _ := cmd.Flags().GetBool("versions")
