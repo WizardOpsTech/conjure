@@ -123,6 +123,14 @@ func TestResolveConfigPathRelative(t *testing.T) {
 	expectedPath := filepath.Clean(configFile)
 	resolvedPath = filepath.Clean(resolvedPath)
 
+	// Resolve symlinks on both sides to handle macOS where /var -> /private/var
+	if evaled, err := filepath.EvalSymlinks(expectedPath); err == nil {
+		expectedPath = evaled
+	}
+	if evaled, err := filepath.EvalSymlinks(resolvedPath); err == nil {
+		resolvedPath = evaled
+	}
+
 	if resolvedPath != expectedPath {
 		t.Errorf("expected path %q, got %q", expectedPath, resolvedPath)
 	}
