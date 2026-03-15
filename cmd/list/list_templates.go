@@ -26,6 +26,7 @@ Examples:
   conjure list templates
   conjure list templates --versions
   conjure list templates --type yaml`,
+		Args: cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			templateType, _ := cmd.Flags().GetString("type")
 			showAllVersions, _ := cmd.Flags().GetBool("versions")

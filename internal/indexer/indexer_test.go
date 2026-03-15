@@ -252,7 +252,7 @@ func TestIndexer_ValidateStructure(t *testing.T) {
 			setupFunc: func(testDir string) string {
 				templatesDir := filepath.Join(testDir, "templates")
 				templateDir := filepath.Join(templatesDir, "test-template", "1.0.0")
-				os.MkdirAll(templateDir, 0755)
+				_ = os.MkdirAll(templateDir, 0755)
 				metadata := `{
 					"schema_version": "v1",
 					"template_name": "test-template",
@@ -261,8 +261,8 @@ func TestIndexer_ValidateStructure(t *testing.T) {
 					"version": "1.0.0",
 					"variables": []
 				}`
-				os.WriteFile(filepath.Join(templateDir, "conjure.json"), []byte(metadata), 0600)
-				os.WriteFile(filepath.Join(templateDir, "template.tmpl"), []byte("test"), 0600)
+				_ = os.WriteFile(filepath.Join(templateDir, "conjure.json"), []byte(metadata), 0600)
+				_ = os.WriteFile(filepath.Join(templateDir, "template.tmpl"), []byte("test"), 0600)
 				return templatesDir
 			},
 			resourceType: "templates",
@@ -273,8 +273,8 @@ func TestIndexer_ValidateStructure(t *testing.T) {
 			setupFunc: func(testDir string) string {
 				templatesDir := filepath.Join(testDir, "templates")
 				templateDir := filepath.Join(templatesDir, "test-template", "1.0.0")
-				os.MkdirAll(templateDir, 0755)
-				os.WriteFile(filepath.Join(templateDir, "template.tmpl"), []byte("test"), 0600)
+				_ = os.MkdirAll(templateDir, 0755)
+				_ = os.WriteFile(filepath.Join(templateDir, "template.tmpl"), []byte("test"), 0600)
 				return templatesDir
 			},
 			resourceType: "templates",
@@ -284,7 +284,7 @@ func TestIndexer_ValidateStructure(t *testing.T) {
 			name: "no versions",
 			setupFunc: func(testDir string) string {
 				templatesDir := filepath.Join(testDir, "templates")
-				os.MkdirAll(filepath.Join(templatesDir, "test-template"), 0755)
+				_ = os.MkdirAll(filepath.Join(templatesDir, "test-template"), 0755)
 				return templatesDir
 			},
 			resourceType: "templates",

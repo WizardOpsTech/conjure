@@ -73,7 +73,7 @@ func (r *RemoteSource) fetchIndex(skipCache bool) error {
 	if err != nil {
 		return fmt.Errorf("failed to fetch index: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("failed to fetch index: HTTP %d", resp.StatusCode)
@@ -219,7 +219,7 @@ func (r *RemoteSource) GetTemplate(name, requestedVersion string) (*TemplateCont
 		if err != nil {
 			return nil, fmt.Errorf("failed to download file '%s': %w", file.Name, err)
 		}
-		defer os.Remove(tempFile)
+		defer func(f string) { _ = os.Remove(f) }(tempFile)
 
 		content, err := os.ReadFile(tempFile)
 		if err != nil {
@@ -264,6 +264,7 @@ func (r *RemoteSource) GetBundle(name, requestedVersion string) (*BundleContent,
 	}
 
 	if err := r.fetchIndex(false); err != nil {
+		return nil, fmt.Errorf("failed to fetch bundle index: %w", err)
 	}
 
 	var bundleEntry *BundleIndexEntry
@@ -327,7 +328,7 @@ func (r *RemoteSource) GetBundle(name, requestedVersion string) (*BundleContent,
 		if err != nil {
 			return nil, fmt.Errorf("failed to download file '%s': %w", file.Name, err)
 		}
-		defer os.Remove(tempFile)
+		defer func(f string) { _ = os.Remove(f) }(tempFile)
 
 		content, err := os.ReadFile(tempFile)
 		if err != nil {
@@ -415,7 +416,7 @@ func (r *RemoteSource) downloadFile(url string, expectedSize int64, expectedHash
 	if err != nil {
 		return "", fmt.Errorf("failed to download: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("failed to download: HTTP %d", resp.StatusCode)
@@ -428,27 +429,27 @@ func (r *RemoteSource) downloadFile(url string, expectedSize int64, expectedHash
 	tempPath := tempFile.Name()
 
 	written, err := io.Copy(tempFile, resp.Body)
-	tempFile.Close()
+	_ = tempFile.Close()
 
 	if err != nil {
-		os.Remove(tempPath)
+		_ = os.Remove(tempPath)
 		return "", fmt.Errorf("failed to write file: %w", err)
 	}
 
 	if written != expectedSize {
-		os.Remove(tempPath)
+		_ = os.Remove(tempPath)
 		return "", fmt.Errorf("file size mismatch: expected %d bytes, got %d bytes. This likely means index.json was generated with different line endings (Windows CRLF vs Linux LF) than the files on the remote repository", expectedSize, written)
 	}
 
 	if expectedHash != "" {
 		if err := r.verifier.VerifySHA256(tempPath, expectedHash); err != nil {
-			os.Remove(tempPath)
+			_ = os.Remove(tempPath)
 			return "", fmt.Errorf("%w. This means the file content on the remote repository doesn't match what was used to generate index.json", err)
 		}
 	}
 
 	if err := os.Chmod(tempPath, cacheFilePerm); err != nil {
-		os.Remove(tempPath)
+		_ = os.Remove(tempPath)
 		return "", fmt.Errorf("failed to set file permissions: %w", err)
 	}
 

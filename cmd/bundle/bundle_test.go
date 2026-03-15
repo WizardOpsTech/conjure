@@ -273,7 +273,7 @@ func createTempFile(pattern, content string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer tmpFile.Close()
+	defer func() { _ = tmpFile.Close() }()
 
 	_, err = tmpFile.WriteString(content)
 	if err != nil {
@@ -284,5 +284,5 @@ func createTempFile(pattern, content string) (string, error) {
 }
 
 func cleanupTempFile(path string) {
-	os.Remove(path)
+	_ = os.Remove(path)
 }

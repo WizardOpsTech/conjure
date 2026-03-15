@@ -108,7 +108,7 @@ func TestResolveConfigPathRelative(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to get original working directory: %v", err)
 	}
-	defer os.Chdir(originalWd)
+	defer func() { _ = os.Chdir(originalWd) }()
 
 	if err := os.Chdir(subDir); err != nil {
 		t.Fatalf("failed to change to subdirectory: %v", err)
@@ -122,6 +122,14 @@ func TestResolveConfigPathRelative(t *testing.T) {
 
 	expectedPath := filepath.Clean(configFile)
 	resolvedPath = filepath.Clean(resolvedPath)
+
+	// Resolve symlinks on both sides to handle macOS where /var -> /private/var
+	if evaled, err := filepath.EvalSymlinks(expectedPath); err == nil {
+		expectedPath = evaled
+	}
+	if evaled, err := filepath.EvalSymlinks(resolvedPath); err == nil {
+		resolvedPath = evaled
+	}
 
 	if resolvedPath != expectedPath {
 		t.Errorf("expected path %q, got %q", expectedPath, resolvedPath)
@@ -161,7 +169,7 @@ func TestResolveConfigPathHomeDirExpansion(t *testing.T) {
 				t.Skipf("failed to create test file in home directory: %v", err)
 				return
 			}
-			defer os.Remove(testFile)
+			defer func() { _ = os.Remove(testFile) }()
 
 			resolvedPath, err := resolveConfigPath(tt.inputPath)
 			if err != nil {

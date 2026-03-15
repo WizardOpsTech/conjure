@@ -70,7 +70,7 @@ func createMockServer() *httptest.Server {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(index)
+		_ = json.NewEncoder(w).Encode(index)
 	})
 
 	mux.HandleFunc("/templates/test-template/1.0.0/conjure.json", func(w http.ResponseWriter, r *http.Request) {
@@ -82,11 +82,11 @@ func createMockServer() *httptest.Server {
 			"template_type":        "yaml",
 			"variables":            []interface{}{},
 		}
-		json.NewEncoder(w).Encode(metadata)
+		_ = json.NewEncoder(w).Encode(metadata)
 	})
 
 	mux.HandleFunc("/templates/test-template/1.0.0/template.tmpl", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("template content"))
+		_, _ = w.Write([]byte("template content"))
 	})
 
 	mux.HandleFunc("/bundles/test-bundle/1.0.0/conjure.json", func(w http.ResponseWriter, r *http.Request) {
@@ -99,11 +99,11 @@ func createMockServer() *httptest.Server {
 			"shared_variables":   []interface{}{},
 			"template_variables": map[string]interface{}{},
 		}
-		json.NewEncoder(w).Encode(metadata)
+		_ = json.NewEncoder(w).Encode(metadata)
 	})
 
 	mux.HandleFunc("/bundles/test-bundle/1.0.0/app.yaml.tmpl", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("app template content"))
+		_, _ = w.Write([]byte("app template content"))
 	})
 
 	return httptest.NewServer(mux)
@@ -342,7 +342,7 @@ func TestRemoteSource_InvalidIndex(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/index.json" {
-			w.Write([]byte("invalid json"))
+			_, _ = w.Write([]byte("invalid json"))
 		}
 	}))
 	defer server.Close()
@@ -367,7 +367,7 @@ func TestRemoteSource_UnsupportedSchemaVersion(t *testing.T) {
 				SchemaVersion: "v99",
 				Templates:     []TemplateIndexEntry{},
 			}
-			json.NewEncoder(w).Encode(index)
+			_ = json.NewEncoder(w).Encode(index)
 		}
 	}))
 	defer server.Close()

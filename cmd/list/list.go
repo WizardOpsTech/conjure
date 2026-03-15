@@ -15,6 +15,7 @@ Example: conjure list templates,
          conjure list bundles,
          conjure list templates -t yaml,
          conjure list bundles -t kubernetes`,
+	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("=== Templates ===")
 		listTemplates("", false)

@@ -46,7 +46,7 @@ Examples:
 			fmt.Printf("built: %s\n", dateInfo)
 			return
 		}
-		cmd.Help()
+		_ = cmd.Help()
 	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if showVersion {
