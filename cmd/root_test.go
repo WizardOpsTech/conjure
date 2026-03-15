@@ -108,7 +108,7 @@ func TestResolveConfigPathRelative(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to get original working directory: %v", err)
 	}
-	defer os.Chdir(originalWd)
+	defer func() { _ = os.Chdir(originalWd) }()
 
 	if err := os.Chdir(subDir); err != nil {
 		t.Fatalf("failed to change to subdirectory: %v", err)
@@ -161,7 +161,7 @@ func TestResolveConfigPathHomeDirExpansion(t *testing.T) {
 				t.Skipf("failed to create test file in home directory: %v", err)
 				return
 			}
-			defer os.Remove(testFile)
+			defer func() { _ = os.Remove(testFile) }()
 
 			resolvedPath, err := resolveConfigPath(tt.inputPath)
 			if err != nil {
