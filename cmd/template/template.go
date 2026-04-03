@@ -121,7 +121,7 @@ func generateTemplate(templateName, templateVersion, outputPath string, varsList
 		fmt.Printf("Using metadata: %s\n\n", meta.TemplateDescription)
 
 		if interactive {
-			finalVariables, err = prompt.CollectVariables(meta, userVariables)
+			finalVariables, err = prompt.CollectVariables(meta, userVariables, cfg.ColorTheme)
 			if err != nil {
 				return fmt.Errorf("failed to collect variables: %w", err)
 			}

@@ -7,25 +7,28 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/wizardopstech/conjure/internal/metadata"
+	"github.com/wizardopstech/conjure/internal/themes"
 )
 
-var (
-	titleStyle = lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color("99"))
+type styles struct {
+	title       lipgloss.Style
+	prompt      lipgloss.Style
+	description lipgloss.Style
+	input       lipgloss.Style
+	success     lipgloss.Style
+	required    lipgloss.Style
+}
 
-	promptStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("86"))
-
-	descriptionStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("241"))
-
-	inputStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("219"))
-
-	successStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("42"))
-)
+func newStyles(t themes.Theme) styles {
+	return styles{
+		title:       lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(t.Title)),
+		prompt:      lipgloss.NewStyle().Foreground(lipgloss.Color(t.Prompt)),
+		description: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Description)),
+		input:       lipgloss.NewStyle().Foreground(lipgloss.Color(t.Input)),
+		success:     lipgloss.NewStyle().Foreground(lipgloss.Color(t.Success)),
+		required:    lipgloss.NewStyle().Foreground(lipgloss.Color(t.Required)),
+	}
+}
 
 type model struct {
 	metadata     *metadata.TemplateMetadata
@@ -34,15 +37,17 @@ type model struct {
 	currentInput string
 	finished     bool
 	err          error
+	styles       styles
 }
 
-func initialModel(meta *metadata.TemplateMetadata) model {
+func initialModel(meta *metadata.TemplateMetadata, theme themes.Theme) model {
 	return model{
 		metadata:     meta,
 		currentIndex: 0,
 		values:       make(map[string]interface{}),
 		currentInput: "",
 		finished:     false,
+		styles:       newStyles(theme),
 	}
 }
 
@@ -98,23 +103,25 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
+	s := m.styles
+
 	if m.finished {
 		if m.err != nil {
 			return ""
 		}
-		return successStyle.Render("✓ All variables collected!\n")
+		return s.success.Render("✓ All variables collected!\n")
 	}
 
 	var b strings.Builder
 
 	// Title
-	_, _ = b.WriteString(titleStyle.Render(fmt.Sprintf("Template: %s", m.metadata.TemplateName)))
+	_, _ = b.WriteString(s.title.Render(fmt.Sprintf("Template: %s", m.metadata.TemplateName)))
 	_, _ = b.WriteString("\n")
-	_, _ = b.WriteString(descriptionStyle.Render(m.metadata.TemplateDescription))
+	_, _ = b.WriteString(s.description.Render(m.metadata.TemplateDescription))
 	_, _ = b.WriteString("\n\n")
 
 	// Progress
-	_, _ = b.WriteString(descriptionStyle.Render(fmt.Sprintf("Variable %d of %d", m.currentIndex+1, len(m.metadata.Variables))))
+	_, _ = b.WriteString(s.description.Render(fmt.Sprintf("Variable %d of %d", m.currentIndex+1, len(m.metadata.Variables))))
 	_, _ = b.WriteString("\n\n")
 
 	// Current variable
@@ -124,34 +131,34 @@ func (m model) View() string {
 		// Variable name
 		required := ""
 		if currentVar.Default == "" {
-			required = lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Render(" *")
+			required = s.required.Render(" *")
 		}
-		_, _ = b.WriteString(promptStyle.Render(fmt.Sprintf("%s%s", currentVar.Name, required)))
+		_, _ = b.WriteString(s.prompt.Render(fmt.Sprintf("%s%s", currentVar.Name, required)))
 		_, _ = b.WriteString("\n")
 
 		// Description
-		_, _ = b.WriteString(descriptionStyle.Render(currentVar.Description))
+		_, _ = b.WriteString(s.description.Render(currentVar.Description))
 		_, _ = b.WriteString("\n")
 
 		// Default value hint
 		if currentVar.Default != "" {
-			_, _ = b.WriteString(descriptionStyle.Render(fmt.Sprintf("[default: %s]", currentVar.Default)))
+			_, _ = b.WriteString(s.description.Render(fmt.Sprintf("[default: %s]", currentVar.Default)))
 			_, _ = b.WriteString("\n")
 		}
 
 		// Input field
-		_, _ = b.WriteString(inputStyle.Render("> " + m.currentInput + "█"))
+		_, _ = b.WriteString(s.input.Render("> " + m.currentInput + "█"))
 		_, _ = b.WriteString("\n\n")
 
 		// Help text
-		_, _ = b.WriteString(descriptionStyle.Render("Press Enter to continue, Ctrl+C to cancel"))
+		_, _ = b.WriteString(s.description.Render("Press Enter to continue, Ctrl+C to cancel"))
 	}
 
 	return b.String()
 }
 
-func CollectVariables(meta *metadata.TemplateMetadata, existingVars map[string]interface{}) (map[string]interface{}, error) {
-	m := initialModel(meta)
+func CollectVariables(meta *metadata.TemplateMetadata, existingVars map[string]interface{}, colorTheme string) (map[string]interface{}, error) {
+	m := initialModel(meta, themes.Get(colorTheme))
 
 	if existingVars != nil {
 		m.values = existingVars
@@ -171,7 +178,7 @@ func CollectVariables(meta *metadata.TemplateMetadata, existingVars map[string]i
 	return final.values, nil
 }
 
-func CollectBundleVariables(bundleMeta *metadata.BundleMetadata, existingVars map[string]interface{}) (map[string]interface{}, map[string]map[string]interface{}, error) {
+func CollectBundleVariables(bundleMeta *metadata.BundleMetadata, existingVars map[string]interface{}, colorTheme string) (map[string]interface{}, map[string]map[string]interface{}, error) {
 	varToTemplates := make(map[string][]string)
 
 	for _, v := range bundleMeta.SharedVariables {
@@ -207,12 +214,12 @@ func CollectBundleVariables(bundleMeta *metadata.BundleMetadata, existingVars ma
 		Variables:           allVars,
 	}
 
-	vars, err := CollectVariables(tempMeta, existingVars)
+	vars, err := CollectVariables(tempMeta, existingVars, colorTheme)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	overrides, err := CollectTemplateOverrides(bundleMeta, vars)
+	overrides, err := CollectTemplateOverrides(bundleMeta, vars, colorTheme)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -220,8 +227,10 @@ func CollectBundleVariables(bundleMeta *metadata.BundleMetadata, existingVars ma
 	return vars, overrides, nil
 }
 
-func CollectTemplateOverrides(bundleMeta *metadata.BundleMetadata, currentVars map[string]interface{}) (map[string]map[string]interface{}, error) {
+func CollectTemplateOverrides(bundleMeta *metadata.BundleMetadata, currentVars map[string]interface{}, colorTheme string) (map[string]map[string]interface{}, error) {
 	overrides := make(map[string]map[string]interface{})
+
+	s := newStyles(themes.Get(colorTheme))
 
 	templateNames := make([]string, 0)
 	for templateName := range bundleMeta.TemplateVariables {
@@ -238,13 +247,13 @@ func CollectTemplateOverrides(bundleMeta *metadata.BundleMetadata, currentVars m
 	}
 
 	fmt.Println()
-	fmt.Println(descriptionStyle.Render("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
-	fmt.Println(titleStyle.Render("Template-Specific Overrides"))
-	fmt.Println(descriptionStyle.Render("Override shared variables for specific templates"))
+	fmt.Println(s.description.Render("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"))
+	fmt.Println(s.title.Render("Template-Specific Overrides"))
+	fmt.Println(s.description.Render("Override shared variables for specific templates"))
 	fmt.Println()
 
 	for {
-		fmt.Print(promptStyle.Render("Add a template-specific override? (y/n): "))
+		fmt.Print(s.prompt.Render("Add a template-specific override? (y/n): "))
 		var response string
 		if _, err := fmt.Scanln(&response); err != nil {
 			break
@@ -256,50 +265,50 @@ func CollectTemplateOverrides(bundleMeta *metadata.BundleMetadata, currentVars m
 		}
 
 		fmt.Println()
-		fmt.Println(descriptionStyle.Render("Available templates:"))
+		fmt.Println(s.description.Render("Available templates:"))
 		for i, tmpl := range templateNames {
 			fmt.Printf("  %d. %s\n", i+1, tmpl)
 		}
-		fmt.Print(promptStyle.Render("Select template (number): "))
+		fmt.Print(s.prompt.Render("Select template (number): "))
 		var templateIdx int
 		if _, err := fmt.Scanln(&templateIdx); err != nil {
-			fmt.Println(descriptionStyle.Render("Invalid input, skipping..."))
+			fmt.Println(s.description.Render("Invalid input, skipping..."))
 			continue
 		}
 		if templateIdx < 1 || templateIdx > len(templateNames) {
-			fmt.Println(descriptionStyle.Render("Invalid selection, skipping..."))
+			fmt.Println(s.description.Render("Invalid selection, skipping..."))
 			continue
 		}
 		selectedTemplate := templateNames[templateIdx-1]
 
 		fmt.Println()
-		fmt.Println(descriptionStyle.Render("Shared variables:"))
+		fmt.Println(s.description.Render("Shared variables:"))
 		for i, varName := range sharedVarNames {
 			currentVal := currentVars[varName]
 			fmt.Printf("  %d. %s (current: %v)\n", i+1, varName, currentVal)
 		}
-		fmt.Print(promptStyle.Render("Select variable to override (number): "))
+		fmt.Print(s.prompt.Render("Select variable to override (number): "))
 		var varIdx int
 		if _, err := fmt.Scanln(&varIdx); err != nil {
-			fmt.Println(descriptionStyle.Render("Invalid input, skipping..."))
+			fmt.Println(s.description.Render("Invalid input, skipping..."))
 			continue
 		}
 		if varIdx < 1 || varIdx > len(sharedVarNames) {
-			fmt.Println(descriptionStyle.Render("Invalid selection, skipping..."))
+			fmt.Println(s.description.Render("Invalid selection, skipping..."))
 			continue
 		}
 		selectedVar := sharedVarNames[varIdx-1]
 
-		fmt.Print(promptStyle.Render(fmt.Sprintf("New value for %s in %s: ", selectedVar, selectedTemplate)))
+		fmt.Print(s.prompt.Render(fmt.Sprintf("New value for %s in %s: ", selectedVar, selectedTemplate)))
 		var newValue string
 		if _, err := fmt.Scanln(&newValue); err != nil {
-			fmt.Println(descriptionStyle.Render("Invalid input, skipping..."))
+			fmt.Println(s.description.Render("Invalid input, skipping..."))
 			continue
 		}
 		newValue = strings.TrimSpace(newValue)
 
 		if newValue == "" {
-			fmt.Println(descriptionStyle.Render("Empty value, skipping..."))
+			fmt.Println(s.description.Render("Empty value, skipping..."))
 			continue
 		}
 
@@ -308,13 +317,13 @@ func CollectTemplateOverrides(bundleMeta *metadata.BundleMetadata, currentVars m
 		}
 		overrides[selectedTemplate][selectedVar] = newValue
 
-		fmt.Println(successStyle.Render(fmt.Sprintf("✓ Override added: %s.%s = %s", selectedTemplate, selectedVar, newValue)))
+		fmt.Println(s.success.Render(fmt.Sprintf("✓ Override added: %s.%s = %s", selectedTemplate, selectedVar, newValue)))
 		fmt.Println()
 	}
 
 	if len(overrides) > 0 {
 		fmt.Println()
-		fmt.Println(successStyle.Render(fmt.Sprintf("✓ %d template override(s) configured", len(overrides))))
+		fmt.Println(s.success.Render(fmt.Sprintf("✓ %d template override(s) configured", len(overrides))))
 	}
 
 	return overrides, nil

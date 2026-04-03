@@ -225,6 +225,54 @@ func TestConfigValidate(t *testing.T) {
 	}
 }
 
+func TestConfigValidate_ColorTheme(t *testing.T) {
+	base := Config{
+		TemplatesSource:   "local",
+		BundlesSource:     "local",
+		TemplatesLocalDir: "templates",
+		BundlesLocalDir:   "bundles",
+		CacheDir:          ".cache",
+		TemplatesPriority: "local-first",
+		BundlesPriority:   "local-first",
+	}
+
+	tests := []struct {
+		name       string
+		colorTheme string
+		wantErr    bool
+	}{
+		{"empty theme is valid (uses default)", "", false},
+		{"arcane-ember is valid", "arcane-ember", false},
+		{"moonlit-mana is valid", "moonlit-mana", false},
+		{"runestone-grove is valid", "runestone-grove", false},
+		{"spellforge is valid", "spellforge", false},
+		{"celestial-grimoire is valid", "celestial-grimoire", false},
+		{"mystic-marsh is valid", "mystic-marsh", false},
+		{"dragon-hoard is valid", "dragon-hoard", false},
+		{"enchanted-aurora is valid", "enchanted-aurora", false},
+		{"hexfire is valid", "hexfire", false},
+		{"potionmaker is valid", "potionmaker", false},
+		{"feywild-bloom is valid", "feywild-bloom", false},
+		{"storm-sorcerer is valid", "storm-sorcerer", false},
+		{"necromancers-ledger is valid", "necromancers-ledger", false},
+		{"sunspell-sanctum is valid", "sunspell-sanctum", false},
+		{"crystal-familiar is valid", "crystal-familiar", false},
+		{"unknown theme is invalid", "rainbow-wizard", true},
+		{"uppercase theme is invalid", "Arcane-Ember", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := base
+			cfg.ColorTheme = tt.colorTheme
+			err := cfg.Validate()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Config.Validate() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
 func TestConfigGetters(t *testing.T) {
 	cfg := Config{
 		TemplatesSource:   "both",
