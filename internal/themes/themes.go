@@ -1,5 +1,10 @@
 package themes
 
+// TargetBackground is the canonical dark background all themes are designed and
+// validated against. Every foreground color in this file must achieve a minimum
+// WCAG AA contrast ratio of 4.5:1 against this value.
+const TargetBackground = "#121212"
+
 // lipgloss-compatible color values (hex or ANSI 256) for each UI element.
 type Theme struct {
 	Title       string
@@ -13,7 +18,7 @@ type Theme struct {
 var Default = Theme{
 	Title:       "99",
 	Prompt:      "86",
-	Description: "241",
+	Description: "#9E9E9E", // was "241" (~#626262, 3.07:1 — failed WCAG AA)
 	Input:       "219",
 	Success:     "42",
 	Required:    "196",
@@ -22,8 +27,8 @@ var Default = Theme{
 var catalog = map[string]Theme{
 	"arcane-ember": {
 		Title:       "#E05C2A",
-		Prompt:      "#C84B31",
-		Description: "#7A7A7A",
+		Prompt:      "#E5603A", // was #C84B31 (4.02:1 — failed WCAG AA)
+		Description: "#9E9E9E", // was #7A7A7A (4.36:1 — failed WCAG AA)
 		Input:       "#D4A017",
 		Success:     "#E05C2A",
 		Required:    "#FF3300",
@@ -50,14 +55,14 @@ var catalog = map[string]Theme{
 		Description: "#78909C",
 		Input:       "#CD7F32",
 		Success:     "#FF7043",
-		Required:    "#DC143C",
+		Required:    "#FF4444", // was #DC143C (3.75:1 — failed WCAG AA)
 	},
 	"celestial-grimoire": {
-		Title:       "#9C27B0",
+		Title:       "#CE4DE4", // was #9C27B0 (2.97:1 — failed WCAG AA)
 		Prompt:      "#F1C40F",
 		Description: "#C8B89A",
 		Input:       "#4FC3F7",
-		Success:     "#9C27B0",
+		Success:     "#CE4DE4", // was #9C27B0 (2.97:1 — failed WCAG AA)
 		Required:    "#E74C3C",
 	},
 	"mystic-marsh": {
@@ -78,25 +83,25 @@ var catalog = map[string]Theme{
 	},
 	"enchanted-aurora": {
 		Title:       "#00BCD4",
-		Prompt:      "#E91E63",
+		Prompt:      "#FF4D8C", // was #E91E63 (4.31:1 — failed WCAG AA)
 		Description: "#7986CB",
 		Input:       "#00E676",
 		Success:     "#00BCD4",
 		Required:    "#FF4081",
 	},
 	"hexfire": {
-		Title:       "#9C27B0",
+		Title:       "#CE4DE4", // was #9C27B0 (2.97:1 — failed WCAG AA)
 		Prompt:      "#F06292",
-		Description: "#757575",
+		Description: "#9E9E9E", // was #757575 (4.07:1 — failed WCAG AA)
 		Input:       "#FF8C00",
-		Success:     "#9C27B0",
+		Success:     "#CE4DE4", // was #9C27B0 (2.97:1 — failed WCAG AA)
 		Required:    "#FF1744",
 	},
 	"potionmaker": {
 		Title:       "#00BFA5",
 		Prompt:      "#8BC34A",
 		Description: "#9E9E9E",
-		Input:       "#AB47BC",
+		Input:       "#C868D8", // was #AB47BC (3.89:1 — failed WCAG AA)
 		Success:     "#00BFA5",
 		Required:    "#FF5252",
 	},
@@ -111,7 +116,7 @@ var catalog = map[string]Theme{
 	"storm-sorcerer": {
 		Title:       "#2979FF",
 		Prompt:      "#78909C",
-		Description: "#607D8B",
+		Description: "#82A5B4", // was #607D8B (4.29:1 — failed WCAG AA)
 		Input:       "#E3F2FD",
 		Success:     "#2979FF",
 		Required:    "#EF5350",

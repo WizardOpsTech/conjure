@@ -151,7 +151,7 @@ func (m model) View() string {
 		_, _ = b.WriteString("\n\n")
 
 		// Help text
-		_, _ = b.WriteString(s.description.Render("Press Enter to continue, Ctrl+C to cancel"))
+		_, _ = b.WriteString(s.description.Render("* required  |  Press Enter to continue, Ctrl+C to cancel"))
 	}
 
 	return b.String()
