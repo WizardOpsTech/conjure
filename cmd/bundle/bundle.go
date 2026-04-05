@@ -142,7 +142,7 @@ func generateBundle(bundleName, bundleVersion, outputPath string, varsList []str
 
 	if interactive {
 		var interactiveOverrides map[string]map[string]interface{}
-		userVariables, interactiveOverrides, err = prompt.CollectBundleVariables(bundleMeta, userVariables)
+		userVariables, interactiveOverrides, err = prompt.CollectBundleVariables(bundleMeta, userVariables, cfg.ColorTheme)
 		if err != nil {
 			return fmt.Errorf("failed to collect variables: %w", err)
 		}

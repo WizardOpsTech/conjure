@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/wizardopstech/conjure/internal/security"
+	"github.com/wizardopstech/conjure/internal/themes"
 )
 
 const (
@@ -39,6 +40,7 @@ type Config struct {
 	CacheDir           string `mapstructure:"cache_dir"`
 	TemplatesPriority  string `mapstructure:"templates_priority"`
 	BundlesPriority    string `mapstructure:"bundles_priority"`
+	ColorTheme         string `mapstructure:"color_theme"`
 }
 
 func LoadConfig() (*Config, error) {
@@ -154,6 +156,10 @@ func (c *Config) Validate() error {
 	}
 	if err := c.validatePriority(c.BundlesPriority, "bundles_priority"); err != nil {
 		return err
+	}
+
+	if !themes.IsValid(c.ColorTheme) {
+		return fmt.Errorf("invalid color_theme: %q (see https://conjure.wizardops.dev/docs/themes)", c.ColorTheme)
 	}
 
 	return nil

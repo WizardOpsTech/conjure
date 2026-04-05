@@ -118,6 +118,7 @@ func initConfig() {
 	_ = viper.BindEnv("CACHE_DIR")
 	_ = viper.BindEnv("TEMPLATES_PRIORITY")
 	_ = viper.BindEnv("BUNDLES_PRIORITY")
+	_ = viper.BindEnv("COLOR_THEME")
 
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
