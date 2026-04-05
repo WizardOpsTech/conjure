@@ -44,18 +44,32 @@ Conjure ships as a single binary with no runtime dependencies.
 
 See the [full documentation](https://conjure.wizardops.dev) on the Conjure website.
 
-## Features and Status
+## Features
 
-|  #  | Feature                                           | Status |
-| :-: | ------------------------------------------------- | :----: |
-|  1  | Template generation with Go template syntax       |   Done |
-|  2  | Bundle generation (multiple templates at once)    |   Done |
-|  3  | Interactive mode with guided variable prompts     |   Done |
-|  4  | Values files with variable precedence             |   Done |
-|  5  | Local template and bundle repositories            |   Done |
-|  6  | Remote repositories with SHA256 verification      |   Done |
-|  7  | Repository index generation (`conjure repo index`)|   Done |
-|  8  | Variable types: string, int, bool                 |   Done |
+- Template configuration files once, generate many times interactivley or in automated workflows.   
+- Bundle generation (multiple templates at once). Package multiple templates into bundles.
+- Interactive mode with guided variable prompts.    
+- Values files and `--vars` flags with variable precedence.         
+- Local template and bundle repositories supported.            
+- Remote repositories support with SHA256 verification over https/https.
+- Repository index generation (`conjure repo index`) made easy.
+- Support for versioned templates and bundles.
+
+### Interactive Mode
+Run in interactive mode for a more guided configuration creation:
+
+![generate a redis.conf](./assets/theme-dragon-hoard.gif)
+
+### Non-interacitve Mode
+For power users and automation `--vars` and `--values` / `f` files are supported and can be used in combination with precedence:
+
+![generate a k8s manifests](./assets/non-interactive.gif)
+
+## The Conjure Workflow
+
+1. Someone templates a configruation or set of configurations.
+2. That configuration is published to a local or remote registry.
+3. Team members consume those templates interactivley or in automated workflows.
 
 ## Contributing
 
