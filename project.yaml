@@ -1,0 +1,16 @@
+name: conjure
+type: cli
+description: Template-driven configuration generation CLI for DevOps, platform engineers, and developers.
+visibility: public
+indexing: none
+stack:
+  - go
+  - cobra
+  - viper
+  - bubbletea
+standards:
+  - go
+  - cli
+  - testing
+  - logging
+  - error-handling
