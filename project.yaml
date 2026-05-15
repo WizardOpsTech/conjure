@@ -14,3 +14,4 @@ standards:
   - testing
   - logging
   - error-handling
+  - conjure-release-contract
