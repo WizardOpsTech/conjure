@@ -86,36 +86,36 @@ release:
   prerelease: auto
   mode: replace
   header: |
-    ## Conjure {{ .Tag }} ({{ .Date }})
+    ## Conjure {{ .Version }} ({{ .Date }})
 
     Welcome to this new release of Conjure!
   footer: |
     ## Installation
 
-    ### Binary Installation
-
-    Download the appropriate binary for your platform from the assets below.
-
-    ### Quick Install Script (Linux/macOS)
+    ### One-line install (Linux & macOS)
 
     ```bash
-    # Linux
-    curl -L https://github.com/WizardOpsTech/conjure/releases/download/{{ .Tag }}/conjure_{{ .Tag }}_Linux_x86_64.tar.gz | tar xz
-    sudo mv conjure /usr/local/bin/
-
-    # macOS (Intel)
-    curl -L https://github.com/WizardOpsTech/conjure/releases/download/{{ .Tag }}/conjure_{{ .Tag }}_Darwin_x86_64.tar.gz | tar xz
-    sudo mv conjure /usr/local/bin/
-
-    # macOS (Apple Silicon)
-    curl -L https://github.com/WizardOpsTech/conjure/releases/download/{{ .Tag }}/conjure_{{ .Tag }}_Darwin_arm64.tar.gz | tar xz
-    sudo mv conjure /usr/local/bin/
+    curl -sfL https://raw.githubusercontent.com/WizardOpsTech/conjure/main/install.sh | sh
     ```
 
-    ### Windows
+    ### One-line install (Windows PowerShell)
 
-    Download the ZIP file, extract it, and add the executable to your PATH.
+    ```powershell
+    irm https://raw.githubusercontent.com/WizardOpsTech/conjure/main/install.ps1 | iex
+    ```
+
+    ### Manual binary download
+
+    Download the archive for your platform from the assets below, extract it, and move the binary to a directory on your PATH.
+
+    | Platform | Archive |
+    |---|---|
+    | Linux x86_64 | `conjure_{{ .Version }}_Linux_x86_64.tar.gz` |
+    | Linux arm64 | `conjure_{{ .Version }}_Linux_arm64.tar.gz` |
+    | macOS Intel | `conjure_{{ .Version }}_Darwin_x86_64.tar.gz` |
+    | macOS Apple Silicon | `conjure_{{ .Version }}_Darwin_arm64.tar.gz` |
+    | Windows x86_64 | `conjure_{{ .Version }}_Windows_x86_64.zip` |
 
     ---
 
-    **Full Changelog**: https://github.com/WizardOpsTech/conjure/compare/{{ .PreviousTag }}...{{ .Tag }}
+    **Full Changelog**: https://github.com/WizardOpsTech/conjure/compare/{{ .PreviousTag }}...{{ .Version }}
