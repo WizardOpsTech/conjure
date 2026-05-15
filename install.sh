@@ -63,14 +63,22 @@ echo "conjure ${VERSION} installed to ${INSTALL_DIR}/conjure"
 # Warn if the install directory is not on PATH
 case ":${PATH}:" in
   *":${INSTALL_DIR}:"*)
-    echo "Run: conjure --version"
+    echo "Restart your terminal or run the following to use conjure in this session:"
+    echo ""
+    echo "  source ~/.bashrc   # or: source ~/.zshrc"
+    echo ""
+    echo "Then run: conjure --version"
     ;;
   *)
     echo ""
     echo "NOTE: ${INSTALL_DIR} is not on your PATH."
-    echo "Add this line to your ~/.bashrc or ~/.zshrc, then restart your terminal:"
+    echo "Add this line to your ~/.bashrc or ~/.zshrc:"
     echo ""
     echo '  export PATH="$HOME/.local/bin:$PATH"'
+    echo ""
+    echo "Then restart your terminal or run:"
+    echo ""
+    echo "  source ~/.bashrc   # or: source ~/.zshrc"
     echo ""
     echo "Then run: conjure --version"
     ;;
