@@ -28,8 +28,8 @@ try {
     Invoke-WebRequest -Uri $url -OutFile $zipPath -UseBasicParsing
     Expand-Archive -Path $zipPath -DestinationPath $tmp -Force
 
-    # Install to %USERPROFILE%\bin — no admin required
-    $installDir = Join-Path $env:USERPROFILE "bin"
+    # Install to %LOCALAPPDATA%\Programs\conjure — no admin required
+    $installDir = Join-Path $env:LOCALAPPDATA "Programs\conjure"
     New-Item -ItemType Directory -Force -Path $installDir | Out-Null
     Move-Item -Force (Join-Path $tmp "conjure.exe") (Join-Path $installDir "conjure.exe")
 

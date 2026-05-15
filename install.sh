@@ -52,15 +52,26 @@ trap 'rm -rf "$TMP"' EXIT
 curl -sfL "$URL" | tar xzf - -C "$TMP" conjure
 chmod +x "$TMP/conjure"
 
-# Install to /usr/local/bin — use sudo if the directory is not writable
-INSTALL_DIR="/usr/local/bin"
-if [ -w "$INSTALL_DIR" ]; then
-  mv "$TMP/conjure" "$INSTALL_DIR/conjure"
-else
-  echo "Installing to $INSTALL_DIR requires elevated permissions..."
-  sudo mv "$TMP/conjure" "$INSTALL_DIR/conjure"
-fi
+# Install to ~/.local/bin — no sudo required
+INSTALL_DIR="${HOME}/.local/bin"
+mkdir -p "$INSTALL_DIR"
+mv "$TMP/conjure" "$INSTALL_DIR/conjure"
 
 echo ""
 echo "conjure ${VERSION} installed to ${INSTALL_DIR}/conjure"
-echo "Run: conjure --version"
+
+# Warn if the install directory is not on PATH
+case ":${PATH}:" in
+  *":${INSTALL_DIR}:"*)
+    echo "Run: conjure --version"
+    ;;
+  *)
+    echo ""
+    echo "NOTE: ${INSTALL_DIR} is not on your PATH."
+    echo "Add this line to your ~/.bashrc or ~/.zshrc, then restart your terminal:"
+    echo ""
+    echo '  export PATH="$HOME/.local/bin:$PATH"'
+    echo ""
+    echo "Then run: conjure --version"
+    ;;
+esac
