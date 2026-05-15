@@ -86,7 +86,7 @@ release:
   prerelease: auto
   mode: replace
   header: |
-    ## Conjure {{ .Tag }} ({{ .Date }})
+    ## Conjure {{ .Version }} ({{ .Date }})
 
     Welcome to this new release of Conjure!
   footer: |
@@ -110,12 +110,12 @@ release:
 
     | Platform | Archive |
     |---|---|
-    | Linux x86_64 | `conjure_{{ .Tag }}_Linux_x86_64.tar.gz` |
-    | Linux arm64 | `conjure_{{ .Tag }}_Linux_arm64.tar.gz` |
-    | macOS Intel | `conjure_{{ .Tag }}_Darwin_x86_64.tar.gz` |
-    | macOS Apple Silicon | `conjure_{{ .Tag }}_Darwin_arm64.tar.gz` |
-    | Windows x86_64 | `conjure_{{ .Tag }}_Windows_x86_64.zip` |
+    | Linux x86_64 | `conjure_{{ .Version }}_Linux_x86_64.tar.gz` |
+    | Linux arm64 | `conjure_{{ .Version }}_Linux_arm64.tar.gz` |
+    | macOS Intel | `conjure_{{ .Version }}_Darwin_x86_64.tar.gz` |
+    | macOS Apple Silicon | `conjure_{{ .Version }}_Darwin_arm64.tar.gz` |
+    | Windows x86_64 | `conjure_{{ .Version }}_Windows_x86_64.zip` |
 
     ---
 
-    **Full Changelog**: https://github.com/WizardOpsTech/conjure/compare/{{ .PreviousTag }}...{{ .Tag }}
+    **Full Changelog**: https://github.com/WizardOpsTech/conjure/compare/{{ .PreviousTag }}...{{ .Version }}

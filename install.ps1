@@ -12,11 +12,12 @@ if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') {
 Write-Host "Fetching latest Conjure release..."
 $release = Invoke-RestMethod "https://api.github.com/repos/WizardOpsTech/conjure/releases/latest"
 $tag     = $release.tag_name                # e.g. "v1.0.0"
+$version = $tag.TrimStart('v')              # e.g. "1.0.0"
 
-$archive = "conjure_${tag}_Windows_x86_64.zip"
+$archive = "conjure_${version}_Windows_x86_64.zip"
 $url     = "https://github.com/WizardOpsTech/conjure/releases/download/$tag/$archive"
 
-Write-Host "Installing conjure $tag for Windows x86_64..."
+Write-Host "Installing conjure $version for Windows x86_64..."
 
 # Download to a unique temp directory
 $tmp     = Join-Path $env:TEMP "conjure-install-$([System.IO.Path]::GetRandomFileName())"
@@ -38,12 +39,12 @@ try {
     if ($userPath -notlike "*$installDir*") {
         [Environment]::SetEnvironmentVariable("PATH", "$userPath;$installDir", "User")
         Write-Host ""
-        Write-Host "conjure $tag installed to $installDir"
+        Write-Host "conjure $version installed to $installDir"
         Write-Host "Added $installDir to your PATH."
         Write-Host "Restart your terminal, then run: conjure --version"
     } else {
         Write-Host ""
-        Write-Host "conjure $tag installed to $installDir"
+        Write-Host "conjure $version installed to $installDir"
         Write-Host "Run: conjure --version"
     }
 } finally {

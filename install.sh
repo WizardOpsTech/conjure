@@ -39,10 +39,11 @@ if [ -z "$TAG" ]; then
   exit 1
 fi
 
-ARCHIVE="conjure_${TAG}_${OS_SLUG}_${ARCH_SLUG}.tar.gz"
+VERSION="${TAG#v}"
+ARCHIVE="conjure_${VERSION}_${OS_SLUG}_${ARCH_SLUG}.tar.gz"
 URL="https://github.com/WizardOpsTech/conjure/releases/download/${TAG}/${ARCHIVE}"
 
-echo "Installing conjure ${TAG} for ${OS_SLUG}/${ARCH_SLUG}..."
+echo "Installing conjure ${VERSION} for ${OS_SLUG}/${ARCH_SLUG}..."
 
 # Download and extract the binary to a temp directory
 TMP=$(mktemp -d)
@@ -61,5 +62,5 @@ else
 fi
 
 echo ""
-echo "conjure ${TAG} installed to ${INSTALL_DIR}/conjure"
+echo "conjure ${VERSION} installed to ${INSTALL_DIR}/conjure"
 echo "Run: conjure --version"
